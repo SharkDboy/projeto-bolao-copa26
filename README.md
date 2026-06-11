@@ -8,40 +8,26 @@ App de bolão para a Copa 2026 — React + Vite + Tailwind CSS + Supabase.
 - **Meta 2:** Auth Supabase + palpites na nuvem
 - **Meta 3:** Pontuação (3 pts exato, 1 pt vencedor) + ranking real
 
-## Meta 4 — Deploy em produção (atual)
+## Meta 4 — Deploy em produção
 
 Publicar o app na internet via Vercel.
 
-### 1. Supabase — preparar produção
+1. **Authentication → URL Configuration** no Supabase (localhost + URL Vercel)
+2. Importe o repo em [vercel.com/new](https://vercel.com/new) com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`
+3. Veja [`vercel.json`](vercel.json) e [`supabase/README.md`](supabase/README.md)
 
-No dashboard do Supabase:
+## Meta 5 — Placares oficiais (atual)
 
-1. **Authentication → URL Configuration**
-   - Adicione a URL da Vercel em **Site URL** e **Redirect URLs** (ex.: `https://seu-app.vercel.app`)
-   - Mantenha `http://localhost:5173` para dev local
-2. Confirme que os scripts SQL foram executados: `schema.sql`, `fixes.sql`, `meta3.sql`, `seed-results.sql`
+Sincronização automática via [API-Football](https://www.api-football.com/).
 
-### 2. Deploy na Vercel
+1. Rode [`supabase/migrations/20260102000000_api_football_sync.sql`](supabase/migrations/20260102000000_api_football_sync.sql)
+2. Siga [`supabase/functions/sync-match-results/README.md`](supabase/functions/sync-match-results/README.md):
+   - Crie conta e copie a **API-KEY**
+   - Secrets no Supabase: `API_FOOTBALL_KEY`, `CRON_SECRET`
+   - Deploy: `supabase functions deploy sync-match-results`
+   - Agende cron `*/15 * * * *` no dashboard
 
-1. Importe o repositório GitHub em [vercel.com/new](https://vercel.com/new)
-2. Framework preset: **Vite**
-3. Em **Environment Variables**, adicione:
-   - `VITE_SUPABASE_URL` = URL do projeto Supabase
-   - `VITE_SUPABASE_ANON_KEY` = chave anon public
-4. Clique **Deploy**
-
-### Integrações Git
-
-- **GitHub:** repositório com código frontend + pasta [`supabase/`](supabase/)
-- **Supabase + GitHub:** veja [`supabase/README.md`](supabase/README.md) para conectar migrations ao banco via dashboard
-
-O arquivo [`vercel.json`](vercel.json) já configura o roteamento SPA (React Router).
-
-### 3. Testar produção
-
-1. Acesse a URL `.vercel.app`
-2. Crie conta, faça palpites, confira ranking
-3. Teste em celular (layout responsivo)
+Novas partidas usam IDs da API. Partidas mock (`"1"`–`"8"`) permanecem até remoção manual.
 
 ### Desenvolvimento local
 

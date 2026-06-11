@@ -7,6 +7,7 @@ export interface Match {
   isLocked: boolean;
   resultHomeScore?: number | null;
   resultAwayScore?: number | null;
+  status?: string | null;
 }
 
 export interface Prediction {

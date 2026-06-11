@@ -68,9 +68,19 @@ export default function MatchCard({
   return (
     <article className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 shadow-lg">
       <div className="mb-4 flex items-center justify-between gap-2">
-        <span className="rounded-full bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-300">
-          {match.stage}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-300">
+            {match.stage}
+          </span>
+          {match.status === "LIVE" ||
+          match.status === "1H" ||
+          match.status === "2H" ||
+          match.status === "HT" ? (
+            <span className="rounded-full bg-red-950 px-2 py-1 text-xs font-semibold text-red-400">
+              Ao vivo
+            </span>
+          ) : null}
+        </div>
         <time className="text-xs text-zinc-500">{formatKickoff(match.kickoffAt)}</time>
       </div>
 

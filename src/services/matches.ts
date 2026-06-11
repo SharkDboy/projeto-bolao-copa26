@@ -10,6 +10,7 @@ interface MatchRow {
   home_score: number | null;
   away_score: number | null;
   is_locked: boolean;
+  status: string | null;
 }
 
 function mapMatch(row: MatchRow): Match {
@@ -24,6 +25,7 @@ function mapMatch(row: MatchRow): Match {
     stage: row.stage,
     resultHomeScore: row.home_score,
     resultAwayScore: row.away_score,
+    status: row.status,
     isLocked: row.is_locked || kickoffPassed,
   };
 }

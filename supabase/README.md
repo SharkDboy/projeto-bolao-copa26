@@ -9,6 +9,7 @@ Este diretório está configurado para a **integração GitHub do Supabase**.
 | [`config.toml`](config.toml) | Config CLI — `project_id` do projeto remoto |
 | [`migrations/`](migrations/) | Migrations versionadas (deploy via GitHub) |
 | [`seed.sql`](seed.sql) | Dados de exemplo (resultados das partidas 1–4) |
+| [`functions/sync-match-results/`](functions/sync-match-results/) | Edge Function — sync API-Football |
 
 Scripts legados (`schema.sql`, `fixes.sql`, etc.) permanecem como referência manual.
 
