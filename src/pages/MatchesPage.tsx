@@ -39,7 +39,9 @@ export default function MatchesPage() {
         }
       } catch {
         if (!cancelled) {
-          setLoadError("Não foi possível carregar partidas e palpites.");
+          setLoadError(
+            "Não foi possível carregar partidas. Verifique se o Supabase está configurado.",
+          );
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -54,6 +56,12 @@ export default function MatchesPage() {
 
   async function handleSave(prediction: Prediction) {
     if (!user) return;
+
+    const match = matches.find((m) => m.id === prediction.matchId);
+    if (match?.isLocked) {
+      setSaveError("Esta partida já está encerrada para palpites.");
+      return;
+    }
 
     setSavingMatchId(prediction.matchId);
     setSaveError(null);
@@ -74,9 +82,22 @@ export default function MatchesPage() {
   }
 
   const savedCount = Object.keys(predictions).length;
+  const openMatches = matches.filter((m) => !m.isLocked);
+  const closedMatches = matches.filter((m) => m.isLocked);
 
   if (loading) {
     return <p className="text-sm text-zinc-400">Carregando partidas...</p>;
+  }
+
+  if (matches.length === 0) {
+    return (
+      <div>
+        <h2 className="text-2xl font-bold text-white">Partidas</h2>
+        <p className="mt-4 text-sm text-red-400">
+          Nenhuma partida encontrada. Execute o setup do Supabase (veja DEPLOY.md).
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -84,7 +105,8 @@ export default function MatchesPage() {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white">Partidas</h2>
         <p className="mt-1 text-sm text-zinc-400">
-          {savedCount} de {matches.length} palpites salvos
+          {savedCount} de {matches.length} palpites salvos ·{" "}
+          {openMatches.length} abertas para palpite
         </p>
         {loadError && (
           <p className="mt-2 text-sm text-red-400">{loadError}</p>
@@ -94,17 +116,43 @@ export default function MatchesPage() {
         )}
       </div>
 
-      <div className="space-y-4">
-        {matches.map((match) => (
-          <MatchCard
-            key={match.id}
-            match={match}
-            savedPrediction={predictions[match.id]}
-            onSave={handleSave}
-            saving={savingMatchId === match.id}
-          />
-        ))}
-      </div>
+      {openMatches.length > 0 && (
+        <section className="mb-8">
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-emerald-400">
+            Abertas para palpite
+          </h3>
+          <div className="space-y-4">
+            {openMatches.map((match) => (
+              <MatchCard
+                key={match.id}
+                match={match}
+                savedPrediction={predictions[match.id]}
+                onSave={handleSave}
+                saving={savingMatchId === match.id}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {closedMatches.length > 0 && (
+        <section>
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+            Encerradas
+          </h3>
+          <div className="space-y-4">
+            {closedMatches.map((match) => (
+              <MatchCard
+                key={match.id}
+                match={match}
+                savedPrediction={predictions[match.id]}
+                onSave={handleSave}
+                saving={savingMatchId === match.id}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
