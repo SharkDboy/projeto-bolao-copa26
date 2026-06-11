@@ -27,3 +27,6 @@ port = 54323
 enabled = true
 site_url = "http://localhost:5173"
 additional_redirect_urls = ["http://localhost:5173"]
+
+[functions.sync-match-results]
+verify_jwt = false

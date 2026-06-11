@@ -16,7 +16,11 @@ Dashboard → **Project Settings → Edge Functions → Secrets** (ou CLI):
 supabase login
 supabase link --project-ref kxdrlljdtncpwtdhetit
 supabase secrets set API_FOOTBALL_KEY=sua-chave-aqui
+`CRON_SECRET` é **obrigatório**. Sem ele, a function responde `401`.
+
+```powershell
 supabase secrets set CRON_SECRET=um-token-secreto-aleatorio
+```
 # opcionais (padrão: World Cup 2026)
 supabase secrets set API_FOOTBALL_LEAGUE_ID=1
 supabase secrets set API_FOOTBALL_SEASON=2026

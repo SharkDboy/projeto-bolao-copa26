@@ -42,7 +42,7 @@ function mapStage(round: string): string {
 
 function isAuthorized(req: Request): boolean {
   const cronSecret = Deno.env.get("CRON_SECRET");
-  if (!cronSecret) return true;
+  if (!cronSecret) return false;
   const header = req.headers.get("Authorization");
   return header === `Bearer ${cronSecret}`;
 }
@@ -58,7 +58,10 @@ Deno.serve(async (req) => {
   }
 
   if (!isAuthorized(req)) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return Response.json(
+      { error: "Unauthorized — configure CRON_SECRET e envie Authorization: Bearer <secret>" },
+      { status: 401 },
+    );
   }
 
   const apiKey = Deno.env.get("API_FOOTBALL_KEY");
@@ -88,9 +91,9 @@ Deno.serve(async (req) => {
     );
 
     if (!apiRes.ok) {
-      const body = await apiRes.text();
+      console.error("API-Football error", apiRes.status, await apiRes.text());
       return Response.json(
-        { error: "API-Football request failed", status: apiRes.status, body },
+        { error: "Falha ao consultar API-Football" },
         { status: 502 },
       );
     }

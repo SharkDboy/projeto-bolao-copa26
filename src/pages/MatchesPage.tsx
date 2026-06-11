@@ -65,7 +65,9 @@ export default function MatchesPage() {
         [prediction.matchId]: prediction,
       }));
     } catch {
-      setSaveError("Erro ao salvar palpite. Tente novamente.");
+      setSaveError(
+        "Erro ao salvar palpite. A partida pode estar trancada ou o prazo encerrado.",
+      );
     } finally {
       setSavingMatchId(null);
     }
