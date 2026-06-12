@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Match, Prediction } from "../types";
 import { calculateMatchPoints, hasResult } from "../lib/scoring";
+import { getTeamDisplayName } from "../lib/teamFlags";
 import TeamFlag from "./TeamFlag";
 
 interface MatchCardProps {
@@ -69,6 +70,9 @@ export default function MatchCard({
   const scoreInputClass =
     "w-14 rounded-lg border border-zinc-700 bg-zinc-800 py-2 text-center text-lg font-bold text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50 sm:w-16";
 
+  const homeLabel = getTeamDisplayName(match.homeTeam);
+  const awayLabel = getTeamDisplayName(match.awayTeam);
+
   return (
     <article className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-lg sm:p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -96,7 +100,7 @@ export default function MatchCard({
 
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 sm:gap-x-4">
         <p className="truncate text-right text-sm font-semibold text-white sm:text-base">
-          {match.homeTeam}
+          {homeLabel}
         </p>
 
         <div className="flex items-end justify-center gap-2 sm:gap-3">
@@ -106,7 +110,7 @@ export default function MatchCard({
               type="number"
               min={0}
               max={20}
-              aria-label={`Placar ${match.homeTeam}`}
+              aria-label={`Placar ${homeLabel}`}
               value={homeScore}
               disabled={disabled}
               onChange={(e) => setHomeScore(Number(e.target.value))}
@@ -122,7 +126,7 @@ export default function MatchCard({
               type="number"
               min={0}
               max={20}
-              aria-label={`Placar ${match.awayTeam}`}
+              aria-label={`Placar ${awayLabel}`}
               value={awayScore}
               disabled={disabled}
               onChange={(e) => setAwayScore(Number(e.target.value))}
@@ -132,7 +136,7 @@ export default function MatchCard({
         </div>
 
         <p className="truncate text-left text-sm font-semibold text-white sm:text-base">
-          {match.awayTeam}
+          {awayLabel}
         </p>
       </div>
 

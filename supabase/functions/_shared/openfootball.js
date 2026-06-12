@@ -1,6 +1,24 @@
 export const DEFAULT_WORLDCUP_URL =
   "https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json";
 
+const ALLOWED_WORLDCUP_URL_PREFIXES = [
+  "https://raw.githubusercontent.com/openfootball/worldcup.json/",
+];
+
+/** Restringe fetch da Edge Function a URLs confiáveis do openfootball */
+export function resolveWorldCupUrl(url = DEFAULT_WORLDCUP_URL) {
+  const trimmed = url.trim();
+  const allowed = ALLOWED_WORLDCUP_URL_PREFIXES.some((prefix) =>
+    trimmed.startsWith(prefix),
+  );
+  if (!allowed) {
+    throw new Error(
+      "OPENFOOTBALL_WORLDCUP_URL deve ser um raw URL do repositório openfootball/worldcup.json",
+    );
+  }
+  return trimmed;
+}
+
 /**
  * @typedef {Object} OpenFootballMatch
  * @property {string} round
@@ -127,7 +145,8 @@ export function buildMatchRow(match, index, now) {
  * @param {string} [url]
  */
 export async function fetchWorldCupMatches(url = DEFAULT_WORLDCUP_URL) {
-  const res = await fetch(url);
+  const safeUrl = resolveWorldCupUrl(url);
+  const res = await fetch(safeUrl);
   if (!res.ok) {
     throw new Error(`openfootball HTTP ${res.status}: ${await res.text()}`);
   }

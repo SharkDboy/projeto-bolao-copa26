@@ -6,11 +6,24 @@ import {
   rowsFromMatches,
 } from "../_shared/openfootball.js";
 
+function safeEqual(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  const aa = enc.encode(a);
+  const bb = enc.encode(b);
+  if (aa.length !== bb.length) return false;
+  let result = 0;
+  for (let i = 0; i < aa.length; i++) {
+    result |= aa[i] ^ bb[i];
+  }
+  return result === 0;
+}
+
 function isAuthorized(req: Request): boolean {
   const cronSecret = Deno.env.get("CRON_SECRET");
   if (!cronSecret) return false;
   const header = req.headers.get("Authorization");
-  return header === `Bearer ${cronSecret}`;
+  if (!header?.startsWith("Bearer ")) return false;
+  return safeEqual(header.slice(7), cronSecret);
 }
 
 Deno.serve(async (req) => {
