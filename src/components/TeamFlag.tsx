@@ -1,4 +1,4 @@
-import { getTeamFlagUrl } from "../lib/teamFlags";
+import { getTeamFlagEmoji } from "../lib/teamFlags";
 
 interface TeamFlagProps {
   teamName: string;
@@ -6,16 +6,10 @@ interface TeamFlagProps {
   className?: string;
 }
 
-const sizeClasses = {
-  sm: "h-3.5 w-5",
-  md: "h-4 w-6",
-  lg: "h-5 w-7",
-};
-
-const sizeWidths = {
-  sm: 28,
-  md: 40,
-  lg: 56,
+const emojiSizeClasses = {
+  sm: "text-base",
+  md: "text-lg",
+  lg: "text-2xl",
 };
 
 export default function TeamFlag({
@@ -23,26 +17,13 @@ export default function TeamFlag({
   size = "md",
   className = "",
 }: TeamFlagProps) {
-  const url = getTeamFlagUrl(teamName, sizeWidths[size]);
-
-  if (!url) {
-    return (
-      <span
-        className={`inline-flex shrink-0 items-center justify-center rounded bg-zinc-800 text-[10px] font-bold text-zinc-500 ${sizeClasses[size]} ${className}`}
-        aria-hidden
-      >
-        ?
-      </span>
-    );
-  }
-
   return (
-    <img
-      src={url}
-      srcSet={`${getTeamFlagUrl(teamName, sizeWidths[size] * 2)} 2x`}
-      alt=""
-      className={`shrink-0 rounded-sm object-cover shadow-sm ${sizeClasses[size]} ${className}`}
-      loading="lazy"
-    />
+    <span
+      className={`inline-flex shrink-0 items-center justify-center leading-none ${emojiSizeClasses[size]} ${className}`}
+      role="img"
+      aria-label={teamName}
+    >
+      {getTeamFlagEmoji(teamName)}
+    </span>
   );
 }
