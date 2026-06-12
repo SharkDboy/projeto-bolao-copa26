@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Match, Prediction } from "../types";
 import { calculateMatchPoints, hasResult } from "../lib/scoring";
+import TeamFlag from "./TeamFlag";
 
 interface MatchCardProps {
   match: Match;
@@ -65,11 +66,14 @@ export default function MatchCard({
     setTimeout(() => setJustSaved(false), 2000);
   }
 
+  const scoreInputClass =
+    "w-14 rounded-lg border border-zinc-700 bg-zinc-800 py-2 text-center text-lg font-bold text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50 sm:w-16";
+
   return (
-    <article className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 shadow-lg">
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="rounded-full bg-zinc-800 px-3 py-1 text-xs font-medium text-zinc-300">
+    <article className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-lg sm:p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300 sm:px-3">
             {match.stage}
           </span>
           {match.status === "LIVE" ||
@@ -84,51 +88,55 @@ export default function MatchCard({
         <time className="text-xs text-zinc-500">{formatKickoff(match.kickoffAt)}</time>
       </div>
 
-      <div className="mb-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <p className="text-right text-base font-semibold text-white">
-          {match.homeTeam}
-        </p>
-        <span className="text-xs font-bold text-zinc-600">VS</span>
-        <p className="text-left text-base font-semibold text-white">
-          {match.awayTeam}
-        </p>
-      </div>
-
       {resultAvailable && (
         <p className="mb-4 text-center text-sm text-amber-400">
-          Resultado: {match.resultHomeScore} × {match.resultAwayScore}
+          Resultado oficial: {match.resultHomeScore} × {match.resultAwayScore}
         </p>
       )}
 
-      <div className="flex items-end justify-center gap-4">
-        <label className="flex flex-col items-center gap-1">
-          <span className="text-xs text-zinc-500">Casa</span>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+        <div className="flex min-w-0 flex-col items-end gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
+          <div className="flex items-center gap-2 sm:flex-row-reverse">
+            <TeamFlag teamName={match.homeTeam} size="lg" />
+            <p className="truncate text-right text-sm font-semibold text-white sm:text-base">
+              {match.homeTeam}
+            </p>
+          </div>
           <input
             type="number"
             min={0}
             max={20}
+            aria-label={`Placar ${match.homeTeam}`}
             value={homeScore}
             disabled={disabled}
             onChange={(e) => setHomeScore(Number(e.target.value))}
-            className="w-16 rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-2 text-center text-lg font-bold text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
+            className={scoreInputClass}
           />
-        </label>
-        <span className="pb-2 text-xl font-bold text-zinc-600">×</span>
-        <label className="flex flex-col items-center gap-1">
-          <span className="text-xs text-zinc-500">Visitante</span>
+        </div>
+
+        <span className="text-lg font-bold text-zinc-600 sm:text-xl">×</span>
+
+        <div className="flex min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <div className="flex items-center gap-2">
+            <TeamFlag teamName={match.awayTeam} size="lg" />
+            <p className="truncate text-left text-sm font-semibold text-white sm:text-base">
+              {match.awayTeam}
+            </p>
+          </div>
           <input
             type="number"
             min={0}
             max={20}
+            aria-label={`Placar ${match.awayTeam}`}
             value={awayScore}
             disabled={disabled}
             onChange={(e) => setAwayScore(Number(e.target.value))}
-            className="w-16 rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-2 text-center text-lg font-bold text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
+            className={scoreInputClass}
           />
-        </label>
+        </div>
       </div>
 
-      <div className="mt-5 flex items-center justify-between gap-3">
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
           {savedPrediction ? (
             <span className="text-sm text-emerald-400">
@@ -148,7 +156,7 @@ export default function MatchCard({
           type="button"
           onClick={handleSave}
           disabled={disabled || saving}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
         >
           {saving ? "Salvando..." : justSaved ? "Salvo!" : "Salvar palpite"}
         </button>
