@@ -11,6 +11,7 @@ const LOCKED_STATUSES = new Set([
   "BT",
   "P",
   "LIVE",
+  "INT",
   ...FINISHED_STATUSES,
 ]);
 
@@ -30,12 +31,20 @@ interface ApiFixture {
 
 function mapStage(round: string): string {
   const value = round.toLowerCase();
+  if (value.includes("3rd place") || value.includes("third place")) {
+    return "Disputa 3º lugar";
+  }
   if (value.includes("final") && !value.includes("semi") && !value.includes("quarter")) {
     return "Final";
   }
   if (value.includes("semi")) return "Semifinal";
   if (value.includes("quarter")) return "Quartas de Final";
-  if (value.includes("round of 16") || value.includes("8th")) return "Oitavas de Final";
+  if (value.includes("round of 16") || value.includes("8th finals")) {
+    return "Oitavas de Final";
+  }
+  if (value.includes("round of 32") || value.includes("16th finals")) {
+    return "32 avos de Final";
+  }
   if (value.includes("group")) return "Fase de Grupos";
   return round || "Copa do Mundo";
 }
@@ -45,6 +54,64 @@ function isAuthorized(req: Request): boolean {
   if (!cronSecret) return false;
   const header = req.headers.get("Authorization");
   return header === `Bearer ${cronSecret}`;
+}
+
+async function fetchAllFixtures(
+  apiKey: string,
+  leagueId: string,
+  season: string,
+): Promise<ApiFixture[]> {
+  const all: ApiFixture[] = [];
+  let page = 1;
+  let totalPages = 1;
+
+  while (page <= totalPages) {
+    const url = new URL(`${API_BASE}/fixtures`);
+    url.searchParams.set("league", leagueId);
+    url.searchParams.set("season", season);
+    url.searchParams.set("page", String(page));
+
+    const apiRes = await fetch(url, {
+      headers: { "x-apisports-key": apiKey },
+    });
+
+    if (!apiRes.ok) {
+      throw new Error(`API-Football HTTP ${apiRes.status}: ${await apiRes.text()}`);
+    }
+
+    const apiJson = await apiRes.json();
+    const fixtures = (apiJson.response ?? []) as ApiFixture[];
+    all.push(...fixtures);
+
+    totalPages = apiJson.paging?.total ?? 1;
+    page += 1;
+  }
+
+  return all;
+}
+
+function buildMatchRow(item: ApiFixture, now: string) {
+  const status = item.fixture.status.short;
+  const finished = FINISHED_STATUSES.has(status);
+  const locked = LOCKED_STATUSES.has(status);
+  const homeGoals = item.goals.home;
+  const awayGoals = item.goals.away;
+  const kickoffAt = item.fixture.date;
+  const kickoffPassed = new Date(kickoffAt).getTime() <= Date.now();
+
+  return {
+    id: String(item.fixture.id),
+    external_id: item.fixture.id,
+    home_team: item.teams.home.name,
+    away_team: item.teams.away.name,
+    kickoff_at: kickoffAt,
+    stage: mapStage(item.league.round),
+    status,
+    synced_at: now,
+    is_locked: locked || kickoffPassed,
+    home_score: finished && homeGoals != null ? homeGoals : null,
+    away_score: finished && awayGoals != null ? awayGoals : null,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -85,59 +152,28 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const apiRes = await fetch(
-      `${API_BASE}/fixtures?league=${leagueId}&season=${season}`,
-      { headers: { "x-apisports-key": apiKey } },
-    );
-
-    if (!apiRes.ok) {
-      console.error("API-Football error", apiRes.status, await apiRes.text());
-      return Response.json(
-        { error: "Falha ao consultar API-Football" },
-        { status: 502 },
-      );
-    }
-
-    const apiJson = await apiRes.json();
-    const fixtures = (apiJson.response ?? []) as ApiFixture[];
-
+    const fixtures = await fetchAllFixtures(apiKey, leagueId, season);
     const supabase = createClient(supabaseUrl, serviceRoleKey);
     const now = new Date().toISOString();
     let upserted = 0;
     let resultsUpdated = 0;
 
-    for (const item of fixtures) {
-      const status = item.fixture.status.short;
-      const finished = FINISHED_STATUSES.has(status);
-      const locked = LOCKED_STATUSES.has(status);
-      const homeGoals = item.goals.home;
-      const awayGoals = item.goals.away;
-
-      const row = {
-        id: String(item.fixture.id),
-        external_id: item.fixture.id,
-        home_team: item.teams.home.name,
-        away_team: item.teams.away.name,
-        kickoff_at: item.fixture.date,
-        stage: mapStage(item.league.round),
-        status,
-        synced_at: now,
-        is_locked: locked,
-        home_score: finished && homeGoals != null ? homeGoals : null,
-        away_score: finished && awayGoals != null ? awayGoals : null,
-      };
-
-      const { error } = await supabase.from("matches").upsert(row, {
+    const batchSize = 50;
+    for (let i = 0; i < fixtures.length; i += batchSize) {
+      const batch = fixtures.slice(i, i + batchSize).map((item) => buildMatchRow(item, now));
+      const { error } = await supabase.from("matches").upsert(batch, {
         onConflict: "external_id",
       });
 
       if (error) {
-        console.error("Upsert error", item.fixture.id, error.message);
-        continue;
+        console.error("Batch upsert error", error.message);
+        return Response.json({ error: error.message }, { status: 500 });
       }
 
-      upserted += 1;
-      if (finished) resultsUpdated += 1;
+      upserted += batch.length;
+      resultsUpdated += batch.filter(
+        (row) => row.home_score != null && row.away_score != null,
+      ).length;
     }
 
     return Response.json({

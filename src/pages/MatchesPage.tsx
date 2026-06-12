@@ -94,7 +94,7 @@ export default function MatchesPage() {
       <div>
         <h2 className="text-2xl font-bold text-white">Partidas</h2>
         <p className="mt-4 text-sm text-red-400">
-          Nenhuma partida encontrada. Execute o setup do Supabase (veja DEPLOY.md).
+          Nenhuma partida encontrada. Rode o sync da Copa 2026 (veja DEPLOY.md → Meta 5).
         </p>
       </div>
     );

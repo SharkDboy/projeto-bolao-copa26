@@ -1,6 +1,14 @@
 # Edge Function: sync-match-results
 
-Sincroniza partidas e placares da **Copa do Mundo** via [API-Football](https://www.api-football.com/documentation-v3).
+Sincroniza partidas e placares da **Copa do Mundo 2026** via [API-Football](https://www.api-football.com/documentation-v3).
+
+## Alternativa rápida (sem CLI)
+
+```powershell
+npm run sync:matches
+```
+
+Configure `API_FOOTBALL_KEY` e `SUPABASE_SERVICE_ROLE_KEY` no `.env` — ver [DEPLOY.md](../../DEPLOY.md).
 
 ## 1. Obter chave da API
 
@@ -16,15 +24,13 @@ Dashboard → **Project Settings → Edge Functions → Secrets** (ou CLI):
 supabase login
 supabase link --project-ref kxdrlljdtncpwtdhetit
 supabase secrets set API_FOOTBALL_KEY=sua-chave-aqui
-`CRON_SECRET` é **obrigatório**. Sem ele, a function responde `401`.
-
-```powershell
 supabase secrets set CRON_SECRET=um-token-secreto-aleatorio
-```
 # opcionais (padrão: World Cup 2026)
 supabase secrets set API_FOOTBALL_LEAGUE_ID=1
 supabase secrets set API_FOOTBALL_SEASON=2026
 ```
+
+`CRON_SECRET` é **obrigatório**. Sem ele, a function responde `401`.
 
 `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` são injetados automaticamente na Edge Function.
 
@@ -36,7 +42,7 @@ supabase functions deploy sync-match-results
 
 ## 4. Rodar migration
 
-Execute [`migrations/20260102000000_api_football_sync.sql`](migrations/20260102000000_api_football_sync.sql) no SQL Editor (ou `supabase db push`).
+Execute [`RODE-ANTES-DE-USAR.sql`](../RODE-ANTES-DE-USAR.sql) no SQL Editor (remove mocks + colunas de sync).
 
 ## 5. Testar manualmente
 
@@ -50,9 +56,9 @@ Resposta esperada:
 ```json
 {
   "ok": true,
-  "fixturesFromApi": 72,
-  "upserted": 72,
-  "resultsUpdated": 10
+  "fixturesFromApi": 104,
+  "upserted": 104,
+  "resultsUpdated": 12
 }
 ```
 
@@ -65,8 +71,9 @@ Dashboard → **Edge Functions → sync-match-results → Schedules**
 
 ## Comportamento
 
-- Busca fixtures `league=1` (World Cup), `season=2026`
-- Faz upsert em `matches` por `external_id`
+- Busca fixtures `league=1` (World Cup), `season=2026` (104 jogos)
+- Paginação automática da API
+- Upsert em `matches` por `external_id`
 - Partida **encerrada** (`FT`, `AET`, `PEN`): grava placar e trava palpites
-- Partida **ao vivo**: trava palpites sem placar final ainda
-- IDs das partidas passam a ser o `fixture.id` da API (palpites antigos em IDs `"1"`–`"8"` permanecem separados)
+- Partida **ao vivo** ou **após kickoff**: trava palpites
+- IDs das partidas = `fixture.id` da API

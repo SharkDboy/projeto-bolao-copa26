@@ -7,8 +7,9 @@ App de bolão para a Copa 2026 — React + Vite + Tailwind CSS + Supabase.
 Siga o guia **[DEPLOY.md](DEPLOY.md)** — resumo:
 
 1. Rode [`supabase/RODE-ANTES-DE-USAR.sql`](supabase/RODE-ANTES-DE-USAR.sql) no Supabase
-2. Deploy na [Vercel](https://vercel.com/new) importando este repo
-3. Configure a URL `.vercel.app` no Supabase Auth
+2. Sincronize partidas reais: `npm run sync:matches` ([Meta 5](supabase/functions/sync-match-results/README.md))
+3. Deploy na [Vercel](https://vercel.com/new) importando este repo
+4. Configure a URL `.vercel.app` no Supabase Auth
 
 Repo: [github.com/SharkDboy/projeto-bolao-copa26](https://github.com/SharkDboy/projeto-bolao-copa26)
 
@@ -27,8 +28,8 @@ Abra `http://localhost:5173`.
 - Cadastro e login (Supabase Auth)
 - Palpites salvos na nuvem
 - Ranking com pontuação (3 pts exato, 1 pt vencedor)
-- Partidas 1–4 com resultado de exemplo; 5–8 abertas para palpite
-- Sync opcional de placares via API-Football ([Meta 5](supabase/functions/sync-match-results/README.md))
+- **104 partidas reais** da Copa 2026 via API-Football
+- Sync automático opcional (Edge Function + cron a cada 15 min)
 
 ## Comandos
 
@@ -37,6 +38,7 @@ Abra `http://localhost:5173`.
 | `npm run dev` | Servidor local |
 | `npm run dev:host` | Local na rede Wi‑Fi |
 | `npm run build` | Build de produção |
+| `npm run sync:matches` | Importar/atualizar partidas da API-Football |
 
 ## Regras de pontuação
 

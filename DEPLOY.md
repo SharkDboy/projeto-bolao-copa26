@@ -7,7 +7,33 @@
 3. **Authentication → Providers → Email** → desative **Confirm email**
 4. Anote a **Project URL** e **anon key** (Settings → API)
 
-## Passo 2 — Vercel (5 min)
+## Passo 2 — Partidas reais da Copa 2026 (Meta 5)
+
+Escolha **uma** opção:
+
+### Opção A — Script local (mais rápido)
+
+1. Crie conta em [api-football.com](https://www.api-football.com/) e copie a **API-KEY**
+2. No `.env`, adicione:
+   - `API_FOOTBALL_KEY=sua-chave`
+   - `SUPABASE_SERVICE_ROLE_KEY=sua service role` (Settings → API → service_role)
+3. Rode:
+
+```powershell
+npm run sync:matches
+```
+
+Deve aparecer ~104 partidas sincronizadas.
+
+### Opção B — Edge Function + cron (produção)
+
+Siga [`supabase/functions/sync-match-results/README.md`](supabase/functions/sync-match-results/README.md):
+
+1. `supabase secrets set API_FOOTBALL_KEY=...` e `CRON_SECRET=...`
+2. `supabase functions deploy sync-match-results`
+3. Dispare uma vez com `curl` ou agende a cada 15 min
+
+## Passo 3 — Vercel (5 min)
 
 1. Acesse [vercel.com/new](https://vercel.com/new)
 2. Importe **SharkDboy/projeto-bolao-copa26**
@@ -21,7 +47,7 @@
 
 5. **Deploy**
 
-## Passo 3 — Supabase URLs de produção
+## Passo 4 — Supabase URLs de produção
 
 1. Copie a URL do deploy (ex.: `https://projeto-bolao-copa26.vercel.app`)
 2. Supabase → **Authentication → URL Configuration**
@@ -29,11 +55,11 @@
    - `https://SUA-URL.vercel.app`
    - Mantenha `http://localhost:5173` para dev
 
-## Passo 4 — Testar
+## Passo 5 — Testar
 
 1. Abra a URL Vercel em aba anônima
-2. **Criar conta** → palpitar nas partidas **5–8** (abertas)
-3. Partidas **1–4** já têm resultado — servem para ver pontos no ranking
+2. **Criar conta** → palpitar nas partidas com kickoff futuro
+3. Partidas já realizadas aparecem em **Encerradas** com pontuação no ranking
 4. Envie o link para seus amigos
 
 ## Alternativa: mesma rede Wi‑Fi (sem Vercel)

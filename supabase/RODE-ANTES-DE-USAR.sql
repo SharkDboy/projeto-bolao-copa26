@@ -9,6 +9,14 @@ alter table public.matches
 
 create index if not exists matches_external_id_idx on public.matches (external_id);
 
+-- Remove partidas mock (IDs 1–8) — substituídas pelo sync real
+delete from public.predictions
+where match_id in ('1', '2', '3', '4', '5', '6', '7', '8');
+
+delete from public.matches
+where id in ('1', '2', '3', '4', '5', '6', '7', '8')
+   or (external_id is null and synced_at is null);
+
 -- Segurança: FK, limite de placar, RLS com partida aberta
 delete from public.predictions p
 where not exists (
