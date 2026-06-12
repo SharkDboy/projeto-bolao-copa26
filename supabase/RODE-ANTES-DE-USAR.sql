@@ -1,7 +1,7 @@
 -- Execute no SQL Editor do Supabase ANTES de compartilhar o app com amigos.
 -- Idempotente: pode rodar mais de uma vez.
 
--- Meta 5: colunas para sync API-Football
+-- Meta 5: colunas para sync openfootball/worldcup.json
 alter table public.matches
   add column if not exists external_id integer unique,
   add column if not exists status text,
@@ -75,3 +75,7 @@ create policy "predictions_update_own" on public.predictions
         and m.kickoff_at > now()
     )
   );
+
+-- Passo final: carregar as 104 partidas reais da Copa 2026
+-- Execute também o arquivo seed-matches-2026.sql neste mesmo SQL Editor.
+-- (Alternativa: npm run sync:matches com SUPABASE_SERVICE_ROLE_KEY eyJ...)

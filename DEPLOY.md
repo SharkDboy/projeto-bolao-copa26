@@ -1,34 +1,37 @@
 # Deploy — compartilhar com amigos
 
-## Passo 1 — Supabase (5 min)
+## Passo 1 — Supabase (10 min)
 
 1. Abra [Supabase SQL Editor](https://supabase.com/dashboard/project/kxdrlljdtncpwtdhetit/sql/new)
 2. Cole e execute [`RODE-ANTES-DE-USAR.sql`](RODE-ANTES-DE-USAR.sql)
-3. **Authentication → Providers → Email** → desative **Confirm email**
-4. Anote a **Project URL** e **anon key** (Settings → API)
+3. Cole e execute [`seed-matches-2026.sql`](seed-matches-2026.sql) — **104 partidas reais** da Copa 2026
+4. **Authentication → Providers → Email** → desative **Confirm email**
+5. Anote a **Project URL** e **anon key** (Settings → API)
 
-## Passo 2 — Partidas reais da Copa 2026 (Meta 5)
+## Passo 2 — Atualizar partidas depois (opcional)
 
 Dados via [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json) — **sem API key**.
 
-### Opção A — Script local (recomendado)
+### Opção A — Regenerar SQL (mais simples)
 
-1. No `.env`, adicione `SUPABASE_SERVICE_ROLE_KEY` (Settings → API → service_role)
+```powershell
+npm run generate:matches-sql
+```
+
+Execute o `seed-matches-2026.sql` gerado no SQL Editor.
+
+### Opção B — Script com service_role
+
+1. No `.env`, use a chave **`service_role`** (JWT `eyJ...`), **não** `sb_publishable_...`
 2. Rode:
 
 ```powershell
 npm run sync:matches
 ```
 
-Deve aparecer **104 partidas sincronizadas**.
+### Opção C — Edge Function + cron (produção)
 
-### Opção B — Edge Function + cron (produção)
-
-Siga [`supabase/functions/sync-match-results/README.md`](supabase/functions/sync-match-results/README.md):
-
-1. `supabase secrets set CRON_SECRET=...`
-2. `supabase functions deploy sync-match-results`
-3. Dispare uma vez com `curl` ou agende a cada 6 h
+Siga [`supabase/functions/sync-match-results/README.md`](supabase/functions/sync-match-results/README.md).
 
 ## Passo 3 — Vercel (5 min)
 
@@ -56,7 +59,7 @@ Siga [`supabase/functions/sync-match-results/README.md`](supabase/functions/sync
 
 1. Abra a URL Vercel em aba anônima
 2. **Criar conta** → palpitar nas partidas com kickoff futuro
-3. Partidas encerradas ou com resultado aparecem em **Encerradas**
+3. Partidas encerradas aparecem agrupadas por fase
 4. Envie o link para seus amigos
 
 ## Alternativa: mesma rede Wi‑Fi (sem Vercel)

@@ -1,5 +1,5 @@
 /**
- * Nomes de seleções (API-Football / PT) → código ISO para emoji de bandeira.
+ * Nomes de seleções (openfootball / PT) → código ISO para emoji de bandeira.
  * Lookup case-insensitive via chave normalizada.
  */
 const TEAM_FLAG_CODES: Record<string, string> = {

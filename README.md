@@ -6,8 +6,8 @@ App de bolão para a Copa 2026 — React + Vite + Tailwind CSS + Supabase.
 
 Siga o guia **[DEPLOY.md](DEPLOY.md)** — resumo:
 
-1. Rode [`supabase/RODE-ANTES-DE-USAR.sql`](supabase/RODE-ANTES-DE-USAR.sql) no Supabase
-2. Sincronize partidas reais: `npm run sync:matches` ([Meta 5](supabase/functions/sync-match-results/README.md))
+1. Rode [`supabase/RODE-ANTES-DE-USAR.sql`](supabase/RODE-ANTES-DE-USAR.sql) + [`seed-matches-2026.sql`](supabase/seed-matches-2026.sql) no Supabase
+2. Atualize partidas: `npm run generate:matches-sql` ou `npm run sync:matches` ([Meta 5](supabase/functions/sync-match-results/README.md))
 3. Deploy na [Vercel](https://vercel.com/new) importando este repo
 4. Configure a URL `.vercel.app` no Supabase Auth
 
@@ -38,7 +38,8 @@ Abra `http://localhost:5173`.
 | `npm run dev` | Servidor local |
 | `npm run dev:host` | Local na rede Wi‑Fi |
 | `npm run build` | Build de produção |
-| `npm run sync:matches` | Importar/atualizar partidas do openfootball/worldcup.json |
+| `npm run sync:matches` | Importar/atualizar partidas do openfootball (requer service_role eyJ...) |
+| `npm run generate:matches-sql` | Regenerar `seed-matches-2026.sql` para o SQL Editor |
 
 ## Regras de pontuação
 

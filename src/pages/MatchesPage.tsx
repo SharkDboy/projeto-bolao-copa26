@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MatchCard from "../components/MatchCard";
 import { useAuth } from "../contexts/AuthContext";
 import { fetchMatches } from "../services/matches";
@@ -7,6 +7,41 @@ import {
   upsertPrediction,
 } from "../services/predictions";
 import type { Match, Prediction } from "../types";
+
+const STAGE_ORDER = [
+  "Fase de Grupos",
+  "32 avos de Final",
+  "Oitavas de Final",
+  "Quartas de Final",
+  "Semifinal",
+  "Disputa 3º lugar",
+  "Final",
+];
+
+function stageSortIndex(stage: string) {
+  const index = STAGE_ORDER.indexOf(stage);
+  return index === -1 ? STAGE_ORDER.length : index;
+}
+
+function groupMatchesByStage(matches: Match[]) {
+  const groups = new Map<string, Match[]>();
+
+  for (const match of matches) {
+    const list = groups.get(match.stage) ?? [];
+    list.push(match);
+    groups.set(match.stage, list);
+  }
+
+  return [...groups.entries()]
+    .sort(([a], [b]) => stageSortIndex(a) - stageSortIndex(b))
+    .map(([stage, stageMatches]) => ({
+      stage,
+      matches: stageMatches.sort(
+        (a, b) =>
+          new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime(),
+      ),
+    }));
+}
 
 export default function MatchesPage() {
   const { user } = useAuth();
@@ -84,6 +119,14 @@ export default function MatchesPage() {
   const savedCount = Object.keys(predictions).length;
   const openMatches = matches.filter((m) => !m.isLocked);
   const closedMatches = matches.filter((m) => m.isLocked);
+  const openByStage = useMemo(
+    () => groupMatchesByStage(openMatches),
+    [openMatches],
+  );
+  const closedByStage = useMemo(
+    () => groupMatchesByStage(closedMatches),
+    [closedMatches],
+  );
 
   if (loading) {
     return <p className="text-sm text-zinc-400">Carregando partidas...</p>;
@@ -94,7 +137,9 @@ export default function MatchesPage() {
       <div>
         <h2 className="text-2xl font-bold text-white">Partidas</h2>
         <p className="mt-4 text-sm text-red-400">
-          Nenhuma partida encontrada. Rode o sync da Copa 2026 (veja DEPLOY.md → Meta 5).
+          Nenhuma partida encontrada. Execute{" "}
+          <code className="text-zinc-300">supabase/seed-matches-2026.sql</code>{" "}
+          no SQL Editor (veja DEPLOY.md).
         </p>
       </div>
     );
@@ -103,7 +148,7 @@ export default function MatchesPage() {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white">Partidas</h2>
+        <h2 className="text-2xl font-bold text-white">Copa do Mundo 2026</h2>
         <p className="mt-1 text-sm text-zinc-400">
           {savedCount} de {matches.length} palpites salvos ·{" "}
           {openMatches.length} abertas para palpite
@@ -116,39 +161,59 @@ export default function MatchesPage() {
         )}
       </div>
 
-      {openMatches.length > 0 && (
+      {openByStage.length > 0 && (
         <section className="mb-8">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-emerald-400">
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-emerald-400">
             Abertas para palpite
           </h3>
-          <div className="space-y-4">
-            {openMatches.map((match) => (
-              <MatchCard
-                key={match.id}
-                match={match}
-                savedPrediction={predictions[match.id]}
-                onSave={handleSave}
-                saving={savingMatchId === match.id}
-              />
+          <div className="space-y-8">
+            {openByStage.map(({ stage, matches: stageMatches }) => (
+              <div key={stage}>
+                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-500">
+                  {stage} · {stageMatches.length}{" "}
+                  {stageMatches.length === 1 ? "jogo" : "jogos"}
+                </h4>
+                <div className="space-y-4">
+                  {stageMatches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      match={match}
+                      savedPrediction={predictions[match.id]}
+                      onSave={handleSave}
+                      saving={savingMatchId === match.id}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </section>
       )}
 
-      {closedMatches.length > 0 && (
+      {closedByStage.length > 0 && (
         <section>
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500">
             Encerradas
           </h3>
-          <div className="space-y-4">
-            {closedMatches.map((match) => (
-              <MatchCard
-                key={match.id}
-                match={match}
-                savedPrediction={predictions[match.id]}
-                onSave={handleSave}
-                saving={savingMatchId === match.id}
-              />
+          <div className="space-y-8">
+            {closedByStage.map(({ stage, matches: stageMatches }) => (
+              <div key={stage}>
+                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-600">
+                  {stage} · {stageMatches.length}{" "}
+                  {stageMatches.length === 1 ? "jogo" : "jogos"}
+                </h4>
+                <div className="space-y-4">
+                  {stageMatches.map((match) => (
+                    <MatchCard
+                      key={match.id}
+                      match={match}
+                      savedPrediction={predictions[match.id]}
+                      onSave={handleSave}
+                      saving={savingMatchId === match.id}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </section>

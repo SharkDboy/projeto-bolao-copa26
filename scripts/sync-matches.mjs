@@ -41,7 +41,16 @@ async function main() {
   if (!supabaseUrl || !serviceRoleKey) {
     console.error(
       "Defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env\n" +
-        "(service role: Supabase → Settings → API → service_role — nunca commite!)",
+        "(service role: Supabase → Settings → API → service_role — JWT que começa com eyJ)",
+    );
+    process.exit(1);
+  }
+
+  if (!serviceRoleKey.startsWith("eyJ")) {
+    console.error(
+      "SUPABASE_SERVICE_ROLE_KEY inválida: use a chave service_role (JWT eyJ...),\n" +
+        "não a chave publishable (sb_publishable_...).\n" +
+        "Alternativa: execute supabase/seed-matches-2026.sql no SQL Editor.",
     );
     process.exit(1);
   }
@@ -61,7 +70,12 @@ async function main() {
     const { error } = await supabase.from("matches").upsert(batch, {
       onConflict: "external_id",
     });
-    if (error) throw new Error(error.message);
+    if (error) {
+      throw new Error(
+        `${error.message}\n` +
+          "Se vir erro de RLS, confira se a chave é service_role (eyJ...) ou rode seed-matches-2026.sql no SQL Editor.",
+      );
+    }
     upserted += batch.length;
   }
 
