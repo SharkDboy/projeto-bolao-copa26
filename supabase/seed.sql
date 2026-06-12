@@ -1,1 +1,0 @@
--- Deprecated: partidas mock removidas. Use npm run sync:matches ou a Edge Function sync-match-results.

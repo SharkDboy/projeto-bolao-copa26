@@ -26,6 +26,9 @@ function RankingRow({
       <td className="px-3 py-3 text-right font-bold text-emerald-400 sm:px-4">
         {entry.points}
       </td>
+      <td className="px-3 py-3 text-right text-zinc-300 sm:px-4">
+        {entry.scoredPredictionsCount}
+      </td>
       <td className="hidden px-4 py-3 text-right text-zinc-400 sm:table-cell">
         {entry.predictionsCount}
       </td>
@@ -65,7 +68,8 @@ export default function RankingTable({
                 )}
               </p>
               <p className="mt-1 text-xs text-zinc-500">
-                {entry.predictionsCount} palpites
+                {entry.scoredPredictionsCount} pontuados · {entry.predictionsCount}{" "}
+                palpites
               </p>
             </div>
           );
@@ -80,7 +84,10 @@ export default function RankingTable({
               <th className="px-4 py-3 font-medium">#</th>
               <th className="px-4 py-3 font-medium">Jogador</th>
               <th className="px-4 py-3 font-medium text-right">Pontos</th>
-              <th className="px-4 py-3 font-medium text-right">Palpites</th>
+              <th className="px-4 py-3 font-medium text-right">Pontuados</th>
+              <th className="hidden px-4 py-3 font-medium text-right text-zinc-400 sm:table-cell">
+                Palpites
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800 bg-zinc-950">

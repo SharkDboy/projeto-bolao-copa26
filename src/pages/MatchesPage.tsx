@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import MatchCard from "../components/MatchCard";
 import { useAuth } from "../contexts/AuthContext";
+import { groupMatchesByStage } from "../lib/matchStages";
+import { useRefreshInterval } from "../lib/useRefreshInterval";
 import { fetchMatches } from "../services/matches";
 import {
   fetchUserPredictions,
@@ -8,40 +10,7 @@ import {
 } from "../services/predictions";
 import type { Match, Prediction } from "../types";
 
-const STAGE_ORDER = [
-  "Fase de Grupos",
-  "32 avos de Final",
-  "Oitavas de Final",
-  "Quartas de Final",
-  "Semifinal",
-  "Disputa 3º lugar",
-  "Final",
-];
-
-function stageSortIndex(stage: string) {
-  const index = STAGE_ORDER.indexOf(stage);
-  return index === -1 ? STAGE_ORDER.length : index;
-}
-
-function groupMatchesByStage(matches: Match[]) {
-  const groups = new Map<string, Match[]>();
-
-  for (const match of matches) {
-    const list = groups.get(match.stage) ?? [];
-    list.push(match);
-    groups.set(match.stage, list);
-  }
-
-  return [...groups.entries()]
-    .sort(([a], [b]) => stageSortIndex(a) - stageSortIndex(b))
-    .map(([stage, stageMatches]) => ({
-      stage,
-      matches: stageMatches.sort(
-        (a, b) =>
-          new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime(),
-      ),
-    }));
-}
+const REFRESH_MS = 60_000;
 
 export default function MatchesPage() {
   const { user } = useAuth();
@@ -54,40 +23,36 @@ export default function MatchesPage() {
   const [savingMatchId, setSavingMatchId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    const userId = user.id;
-
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
+  const load = useCallback(
+    async (showLoading = false) => {
+      if (!user) return;
+      if (showLoading) setLoading(true);
       setLoadError(null);
       try {
         const [matchList, userPredictions] = await Promise.all([
           fetchMatches(),
-          fetchUserPredictions(userId),
+          fetchUserPredictions(user.id),
         ]);
-        if (!cancelled) {
-          setMatches(matchList);
-          setPredictions(userPredictions);
-        }
+        setMatches(matchList);
+        setPredictions(userPredictions);
       } catch {
-        if (!cancelled) {
-          setLoadError(
-            "Não foi possível carregar partidas. Verifique se o Supabase está configurado.",
-          );
-        }
+        setLoadError(
+          "Não foi possível carregar partidas. Verifique o Supabase.",
+        );
       } finally {
-        if (!cancelled) setLoading(false);
+        if (showLoading) setLoading(false);
       }
-    }
+    },
+    [user],
+  );
 
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
+  useEffect(() => {
+    load(true);
+  }, [load]);
+
+  useRefreshInterval(() => {
+    load(false);
+  }, REFRESH_MS);
 
   async function handleSave(prediction: Prediction) {
     if (!user) return;
@@ -119,6 +84,9 @@ export default function MatchesPage() {
   const savedCount = Object.keys(predictions).length;
   const openMatches = matches.filter((m) => !m.isLocked);
   const closedMatches = matches.filter((m) => m.isLocked);
+  const withResult = matches.filter(
+    (m) => m.resultHomeScore != null && m.resultAwayScore != null,
+  ).length;
   const openByStage = useMemo(
     () => groupMatchesByStage(openMatches),
     [openMatches],
@@ -151,7 +119,7 @@ export default function MatchesPage() {
         <h2 className="text-2xl font-bold text-white">Copa do Mundo 2026</h2>
         <p className="mt-1 text-sm text-zinc-400">
           {savedCount} de {matches.length} palpites salvos ·{" "}
-          {openMatches.length} abertas para palpite
+          {openMatches.length} abertas · {withResult} com resultado oficial
         </p>
         {loadError && (
           <p className="mt-2 text-sm text-red-400">{loadError}</p>

@@ -50,10 +50,15 @@ on conflict (external_id) do update set
   away_team = excluded.away_team,
   kickoff_at = excluded.kickoff_at,
   stage = excluded.stage,
-  home_score = excluded.home_score,
-  away_score = excluded.away_score,
+  home_score = coalesce(excluded.home_score, matches.home_score),
+  away_score = coalesce(excluded.away_score, matches.away_score),
   is_locked = excluded.is_locked,
-  status = excluded.status,
+  status = case
+    when coalesce(excluded.home_score, matches.home_score) is not null
+      and coalesce(excluded.away_score, matches.away_score) is not null
+    then 'FT'
+    else excluded.status
+  end,
   synced_at = excluded.synced_at;`);
     lines.push("");
   }

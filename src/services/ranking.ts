@@ -6,6 +6,7 @@ interface RankingRow {
   display_name: string;
   points: number;
   predictions_count: number;
+  scored_predictions_count: number;
 }
 
 export async function fetchRanking(): Promise<RankingEntry[]> {
@@ -19,5 +20,6 @@ export async function fetchRanking(): Promise<RankingEntry[]> {
     name: row.display_name,
     points: Number(row.points),
     predictionsCount: Number(row.predictions_count),
+    scoredPredictionsCount: Number(row.scored_predictions_count ?? 0),
   }));
 }

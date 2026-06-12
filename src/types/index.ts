@@ -22,4 +22,5 @@ export interface RankingEntry {
   name: string;
   points: number;
   predictionsCount: number;
+  scoredPredictionsCount: number;
 }

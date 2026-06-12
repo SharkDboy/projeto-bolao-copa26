@@ -1,71 +1,39 @@
 # Deploy — compartilhar com amigos
 
-## Passo 1 — Supabase (10 min)
+## Passo 1 — Supabase
 
-1. Abra [Supabase SQL Editor](https://supabase.com/dashboard/project/kxdrlljdtncpwtdhetit/sql/new)
-2. Cole e execute [`RODE-ANTES-DE-USAR.sql`](RODE-ANTES-DE-USAR.sql)
-3. Cole e execute [`seed-matches-2026.sql`](seed-matches-2026.sql) — **104 partidas reais** da Copa 2026
-4. **Authentication → Providers → Email** → desative **Confirm email**
-5. Anote a **Project URL** e **anon key** (Settings → API)
+1. [SQL Editor](https://supabase.com/dashboard/project/kxdrlljdtncpwtdhetit/sql/new) → execute [`RODE-ANTES-DE-USAR.sql`](supabase/RODE-ANTES-DE-USAR.sql)
+2. Execute [`seed-matches-2026.sql`](supabase/seed-matches-2026.sql)
+3. **Authentication → Email** → desative **Confirm email**
 
-## Passo 2 — Atualizar partidas depois (opcional)
+## Passo 2 — Atualizar placares (ranking)
 
-Dados via [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json) — **sem API key**.
-
-### Opção A — Regenerar SQL (mais simples)
-
-```powershell
-npm run generate:matches-sql
-```
-
-Execute o `seed-matches-2026.sql` gerado no SQL Editor.
-
-### Opção B — Script com service_role
-
-1. No `.env`, use a chave **`service_role`** (JWT `eyJ...`), **não** `sb_publishable_...`
-2. Rode:
+O ranking pontua quando a partida tem resultado no banco. Atualize via:
 
 ```powershell
 npm run sync:matches
 ```
 
-### Opção C — Edge Function + cron (produção)
+Requer `SUPABASE_SERVICE_ROLE_KEY` (JWT `eyJ...`) no `.env`.
 
-Siga [`supabase/functions/sync-match-results/README.md`](supabase/functions/sync-match-results/README.md).
+Em produção: Edge Function `sync-match-results` + cron a cada 6h (ver [`functions/sync-match-results/README.md`](supabase/functions/sync-match-results/README.md)).
 
-## Passo 3 — Vercel (5 min)
+O app recarrega partidas e ranking **a cada 60s** no navegador.
 
-1. Acesse [vercel.com/new](https://vercel.com/new)
-2. Importe **SharkDboy/projeto-bolao-copa26**
-3. Framework: **Vite**
-4. Environment Variables:
+## Passo 3 — Vercel
 
-| Nome | Valor |
-|------|-------|
-| `VITE_SUPABASE_URL` | `https://kxdrlljdtncpwtdhetit.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | sua anon key |
+1. [vercel.com/new](https://vercel.com/new) → importe o repo
+2. Env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+3. Deploy
 
-5. **Deploy**
+## Passo 4 — Auth URLs
 
-## Passo 4 — Supabase URLs de produção
+Supabase → **Authentication → URL Configuration** → adicione a URL `.vercel.app` e `http://localhost:5173`.
 
-1. Copie a URL do deploy (ex.: `https://projeto-bolao-copa26.vercel.app`)
-2. Supabase → **Authentication → URL Configuration**
-3. Adicione em **Site URL** e **Redirect URLs**:
-   - `https://SUA-URL.vercel.app`
-   - Mantenha `http://localhost:5173` para dev
+## Comandos úteis
 
-## Passo 5 — Testar
-
-1. Abra a URL Vercel em aba anônima
-2. **Criar conta** → palpitar nas partidas com kickoff futuro
-3. Partidas encerradas aparecem agrupadas por fase
-4. Envie o link para seus amigos
-
-## Alternativa: mesma rede Wi‑Fi (sem Vercel)
-
-```powershell
-npm run dev:host
-```
-
-Adicione `http://SEU-IP:5173` nas Redirect URLs do Supabase.
+| Comando | Descrição |
+|---------|-----------|
+| `npm run dev` | Local |
+| `npm run sync:matches` | Sync openfootball → Supabase |
+| `npm run generate:matches-sql` | Regenerar seed SQL |

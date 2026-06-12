@@ -6,6 +6,8 @@ import {
   rowsFromMatches,
 } from "../_shared/openfootball.js";
 
+const BATCH_SIZE = 50;
+
 function safeEqual(a: string, b: string): boolean {
   const enc = new TextEncoder();
   const aa = enc.encode(a);
@@ -37,10 +39,7 @@ Deno.serve(async (req) => {
   }
 
   if (!isAuthorized(req)) {
-    return Response.json(
-      { error: "Unauthorized — configure CRON_SECRET e envie Authorization: Bearer <secret>" },
-      { status: 401 },
-    );
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -49,10 +48,7 @@ Deno.serve(async (req) => {
     Deno.env.get("OPENFOOTBALL_WORLDCUP_URL") ?? DEFAULT_WORLDCUP_URL;
 
   if (!supabaseUrl || !serviceRoleKey) {
-    return Response.json(
-      { error: "Supabase URL ou SERVICE_ROLE_KEY ausentes" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Supabase config ausente" }, { status: 500 });
   }
 
   try {
@@ -61,31 +57,26 @@ Deno.serve(async (req) => {
     const now = new Date().toISOString();
     const rows = rowsFromMatches(matches, now);
 
-    const batchSize = 50;
     let upserted = 0;
     let resultsUpdated = 0;
 
-    for (let i = 0; i < rows.length; i += batchSize) {
-      const batch = rows.slice(i, i + batchSize);
-      const { error } = await supabase.from("matches").upsert(batch, {
-        onConflict: "external_id",
+    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+      const batch = rows.slice(i, i + BATCH_SIZE);
+      const { data, error } = await supabase.rpc("upsert_matches_sync", {
+        rows: batch,
       });
 
       if (error) {
-        console.error("Batch upsert error", error.message);
         return Response.json({ error: error.message }, { status: 500 });
       }
 
-      upserted += batch.length;
-      resultsUpdated += batch.filter(
-        (row) => row.home_score != null && row.away_score != null,
-      ).length;
+      upserted += (data as { upserted?: number })?.upserted ?? batch.length;
+      resultsUpdated += (data as { results_updated?: number })?.results_updated ?? 0;
     }
 
     return Response.json({
       ok: true,
       source: "openfootball/worldcup.json",
-      url: worldcupUrl,
       fixturesFromApi: matches.length,
       upserted,
       resultsUpdated,

@@ -1,10 +1,6 @@
 /**
- * Sincroniza partidas da Copa 2026 via openfootball/worldcup.json (sem API key).
- *
- * Uso:
- *   npm run sync:matches
- *
- * Alternativa: Edge Function sync-match-results
+ * Sincroniza partidas da Copa 2026 via openfootball/worldcup.json.
+ * Preserva placares já gravados quando o JSON ainda não tem resultado.
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -17,6 +13,8 @@ import {
 } from "../supabase/functions/_shared/openfootball.js";
 
 loadEnv();
+
+const BATCH_SIZE = 50;
 
 function loadEnv() {
   const envPath = resolve(process.cwd(), ".env");
@@ -32,28 +30,28 @@ function loadEnv() {
   }
 }
 
+function assertServiceRoleKey(key) {
+  if (!key) {
+    console.error(
+      "Defina SUPABASE_SERVICE_ROLE_KEY no .env (JWT eyJ... em Settings → API → service_role)",
+    );
+    process.exit(1);
+  }
+  if (!key.startsWith("eyJ")) {
+    console.error(
+      "SUPABASE_SERVICE_ROLE_KEY inválida: use service_role (eyJ...), não publishable.",
+    );
+    process.exit(1);
+  }
+}
+
 async function main() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const worldcupUrl =
     process.env.OPENFOOTBALL_WORLDCUP_URL ?? DEFAULT_WORLDCUP_URL;
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    console.error(
-      "Defina VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env\n" +
-        "(service role: Supabase → Settings → API → service_role — JWT que começa com eyJ)",
-    );
-    process.exit(1);
-  }
-
-  if (!serviceRoleKey.startsWith("eyJ")) {
-    console.error(
-      "SUPABASE_SERVICE_ROLE_KEY inválida: use a chave service_role (JWT eyJ...),\n" +
-        "não a chave publishable (sb_publishable_...).\n" +
-        "Alternativa: execute supabase/seed-matches-2026.sql no SQL Editor.",
-    );
-    process.exit(1);
-  }
+  assertServiceRoleKey(serviceRoleKey);
 
   console.log(`Buscando ${worldcupUrl} ...`);
   const matches = await fetchWorldCupMatches(worldcupUrl);
@@ -62,28 +60,27 @@ async function main() {
   const supabase = createClient(supabaseUrl, serviceRoleKey);
   const now = new Date().toISOString();
   const rows = rowsFromMatches(matches, now);
-  const batchSize = 50;
   let upserted = 0;
+  let resultsUpdated = 0;
 
-  for (let i = 0; i < rows.length; i += batchSize) {
-    const batch = rows.slice(i, i + batchSize);
-    const { error } = await supabase.from("matches").upsert(batch, {
-      onConflict: "external_id",
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE);
+    const { data, error } = await supabase.rpc("upsert_matches_sync", {
+      rows: batch,
     });
     if (error) {
       throw new Error(
         `${error.message}\n` +
-          "Se vir erro de RLS, confira se a chave é service_role (eyJ...) ou rode seed-matches-2026.sql no SQL Editor.",
+          "Rode a migration 20260105000000_sync_and_ranking.sql no Supabase.",
       );
     }
-    upserted += batch.length;
+    upserted += data?.upserted ?? batch.length;
+    resultsUpdated += data?.results_updated ?? 0;
   }
 
-  const withResult = rows.filter(
-    (row) => row.home_score != null && row.away_score != null,
-  ).length;
-
-  console.log(`OK — ${upserted} partidas sincronizadas (${withResult} com resultado)`);
+  console.log(
+    `OK — ${upserted} partidas sincronizadas (${resultsUpdated} com placar neste sync)`,
+  );
 }
 
 main().catch((err) => {
