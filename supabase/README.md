@@ -8,9 +8,9 @@ Este diretório está configurado para a **integração GitHub do Supabase**.
 |---------|-----|
 | [`config.toml`](config.toml) | Config CLI — `project_id` do projeto remoto |
 | [`migrations/`](migrations/) | Migrations versionadas (deploy via GitHub) |
-| [`seed-matches-2026.sql`](seed-matches-2026.sql) | 104 partidas reais Copa 2026 (openfootball) |
+| [`seed-matches-2026.sql`](seed-matches-2026.sql) | 104 partidas reais Copa 2026 (worldcup2026) |
 | [`seed.sql`](seed.sql) | Deprecated — use seed-matches-2026.sql |
-| [`functions/sync-match-results/`](functions/sync-match-results/) | Edge Function — sync openfootball/worldcup.json |
+| [`functions/sync-match-results/`](functions/sync-match-results/) | Edge Function — sync worldcup2026 |
 
 Scripts legados (`schema.sql`, `fixes.sql`, etc.) permanecem como referência manual.
 

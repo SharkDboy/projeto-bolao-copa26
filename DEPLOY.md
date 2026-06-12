@@ -10,7 +10,7 @@
 
 ## Passo 2 — Atualizar partidas depois (opcional)
 
-Dados via [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json) — **sem API key**.
+Dados via [rezarahiminia/worldcup2026](https://github.com/rezarahiminia/worldcup2026) — **sem API key**.
 
 ### Opção A — Regenerar SQL (mais simples)
 

@@ -36,7 +36,7 @@ Assim, novos Cloud Agents instalam as dependências automaticamente antes das ex
 - Cadastro e login (Supabase Auth)
 - Palpites salvos na nuvem
 - Ranking com pontuação (3 pts exato, 1 pt vencedor)
-- **104 partidas reais** da Copa 2026 via [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json) (sem API key)
+- **104 partidas reais** da Copa 2026 via [rezarahiminia/worldcup2026](https://github.com/rezarahiminia/worldcup2026) (sem API key)
 - Sync automático opcional (Edge Function + cron a cada 15 min)
 
 ## Comandos
@@ -46,7 +46,7 @@ Assim, novos Cloud Agents instalam as dependências automaticamente antes das ex
 | `npm run dev` | Servidor local |
 | `npm run dev:host` | Local na rede Wi‑Fi |
 | `npm run build` | Build de produção |
-| `npm run sync:matches` | Importar/atualizar partidas do openfootball (requer service_role eyJ...) |
+| `npm run sync:matches` | Importar/atualizar partidas da API worldcup2026 (requer service_role eyJ...) |
 | `npm run generate:matches-sql` | Regenerar `seed-matches-2026.sql` para o SQL Editor |
 
 ## Regras de pontuação

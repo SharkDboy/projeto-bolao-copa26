@@ -1,7 +1,7 @@
 -- Execute no SQL Editor do Supabase ANTES de compartilhar o app com amigos.
 -- Idempotente: pode rodar mais de uma vez.
 
--- Meta 5: colunas para sync openfootball/worldcup.json
+-- Meta 5: colunas para sync worldcup2026
 alter table public.matches
   add column if not exists external_id integer unique,
   add column if not exists status text,

@@ -1,8 +1,8 @@
 # Edge Function: sync-match-results
 
-Sincroniza partidas e placares da **Copa 2026** via [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json) — **sem API key**.
+Sincroniza partidas e placares da **Copa 2026** via [rezarahiminia/worldcup2026](https://github.com/rezarahiminia/worldcup2026) — **sem API key**.
 
-Fonte padrão: `https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json`
+Fonte padrão: `https://worldcup26.ir/get/games`
 
 ## Alternativa rápida (sem CLI)
 
@@ -20,8 +20,8 @@ Dashboard → **Project Settings → Edge Functions → Secrets** (ou CLI):
 supabase login
 supabase link --project-ref kxdrlljdtncpwtdhetit
 supabase secrets set CRON_SECRET=um-token-secreto-aleatorio
-# opcional — outra edição/copa
-# supabase secrets set OPENFOOTBALL_WORLDCUP_URL=https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json
+# opcional — sobrescrever endpoint
+# supabase secrets set WORLDCUP2026_API_URL=https://worldcup26.ir/get/games
 ```
 
 `CRON_SECRET` é **obrigatório**. Sem ele, a function responde `401`.
@@ -50,7 +50,7 @@ Resposta esperada:
 ```json
 {
   "ok": true,
-  "source": "openfootball/worldcup.json",
+  "source": "rezarahiminia/worldcup2026",
   "fixturesFromApi": 104,
   "upserted": 104,
   "resultsUpdated": 0
@@ -61,14 +61,14 @@ Resposta esperada:
 
 Dashboard → **Edge Functions → sync-match-results → Schedules**
 
-- Cron: `0 */6 * * *` (a cada 6 horas — o JSON é atualizado manualmente na fonte)
+- Cron: `*/15 * * * *` (a cada 15 minutos — a fonte informa atualização frequente dos placares)
 - Header: `Authorization: Bearer SEU_CRON_SECRET`
 
 ## Comportamento
 
-- Baixa o JSON público do GitHub (104 jogos da Copa 2026)
-- Upsert em `matches` por `external_id` (número oficial do jogo ou hash estável)
-- **Placar** (`score.ft`): grava resultado e trava palpites
-- **Após kickoff**: trava palpites (status `LIVE` até o JSON trazer placar)
-- **Mata-mata com times TBD** (ex.: `W74`): trancado até a fonte atualizar os nomes
-- Atualizações de placares dependem de contribuições no repositório [openfootball/worldcup](https://github.com/openfootball/worldcup)
+- Baixa o JSON público da API `worldcup26.ir` (104 jogos da Copa 2026)
+- Upsert em `matches` por `external_id` (ID da partida na API)
+- **Placar**: grava resultado apenas quando a API marca `finished = TRUE`
+- **Após kickoff**: trava palpites (status `LIVE` quando a API indicar jogo em andamento)
+- **Mata-mata sem times definidos** (`home_team_id`/`away_team_id` igual a `0`): trancado até a fonte atualizar os nomes
+- Atualizações de placares dependem do serviço público [worldcup26.ir](https://worldcup26.ir/get/games)

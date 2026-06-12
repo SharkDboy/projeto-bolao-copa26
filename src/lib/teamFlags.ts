@@ -1,6 +1,6 @@
 /**
  * Dados das seleções: código ISO da bandeira + nome em português.
- * Chaves em inglês (openfootball) e português.
+ * Chaves em inglês das APIs de partidas e português.
  */
 export interface TeamInfo {
   flag: string;
@@ -124,6 +124,10 @@ const TEAMS: Record<string, TeamInfo> = {
   Angola: { flag: "ao", pt: "Angola" },
   "DR Congo": { flag: "cd", pt: "República Democrática do Congo" },
   "Congo DR": { flag: "cd", pt: "República Democrática do Congo" },
+  "Democratic Republic of the Congo": {
+    flag: "cd",
+    pt: "República Democrática do Congo",
+  },
   RD: { flag: "cd", pt: "República Democrática do Congo" },
 
   // Ásia / Oceania
