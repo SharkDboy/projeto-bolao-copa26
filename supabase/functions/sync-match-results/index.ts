@@ -4,7 +4,7 @@ import {
   DEFAULT_WORLDCUP_URL,
   fetchWorldCupMatches,
   rowsFromMatches,
-} from "../_shared/openfootball.js";
+} from "../_shared/worldcup2026.js";
 
 const BATCH_SIZE = 50;
 
@@ -45,7 +45,9 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const worldcupUrl =
-    Deno.env.get("OPENFOOTBALL_WORLDCUP_URL") ?? DEFAULT_WORLDCUP_URL;
+    Deno.env.get("WORLDCUP2026_API_URL") ??
+    Deno.env.get("OPENFOOTBALL_WORLDCUP_URL") ??
+    DEFAULT_WORLDCUP_URL;
 
   if (!supabaseUrl || !serviceRoleKey) {
     return Response.json({ error: "Supabase config ausente" }, { status: 500 });
@@ -76,7 +78,8 @@ Deno.serve(async (req) => {
 
     return Response.json({
       ok: true,
-      source: "openfootball/worldcup.json",
+      source: "rezarahiminia/worldcup2026",
+      url: worldcupUrl,
       fixturesFromApi: matches.length,
       upserted,
       resultsUpdated,

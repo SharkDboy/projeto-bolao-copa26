@@ -8,13 +8,26 @@
 
 ## Passo 2 — Atualizar placares (ranking)
 
-O ranking pontua quando a partida tem resultado no banco. Atualize via:
+Dados via [rezarahiminia/worldcup2026](https://github.com/rezarahiminia/worldcup2026) — **sem API key**.
+
+O ranking pontua quando a partida tem resultado no banco.
+
+### Opção A — Regenerar SQL (mais simples)
+
+```powershell
+npm run generate:matches-sql
+```
+
+Execute o `seed-matches-2026.sql` gerado no SQL Editor.
+
+### Opção B — Script com service_role
+
+1. No `.env`, use a chave **`service_role`** (JWT `eyJ...`), **não** `sb_publishable_...`
+2. Rode:
 
 ```powershell
 npm run sync:matches
 ```
-
-Requer `SUPABASE_SERVICE_ROLE_KEY` (JWT `eyJ...`) no `.env`.
 
 Em produção: Edge Function `sync-match-results` + cron a cada 6h (ver [`functions/sync-match-results/README.md`](supabase/functions/sync-match-results/README.md)).
 
@@ -35,5 +48,5 @@ Supabase → **Authentication → URL Configuration** → adicione a URL `.verce
 | Comando | Descrição |
 |---------|-----------|
 | `npm run dev` | Local |
-| `npm run sync:matches` | Sync openfootball → Supabase |
+| `npm run sync:matches` | Sync worldcup2026 → Supabase |
 | `npm run generate:matches-sql` | Regenerar seed SQL |

@@ -23,15 +23,22 @@ Assim, novos Cloud Agents instalam as dependências automaticamente antes das ex
 ## Funcionalidades
 
 - Auth, palpites na nuvem, ranking (3 pts exato / 1 pt vencedor)
-- 104 partidas via [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json)
+- **104 partidas reais** da Copa 2026 via [rezarahiminia/worldcup2026](https://github.com/rezarahiminia/worldcup2026) (sem API key)
 - Sync de placares → ranking atualiza automaticamente
-- UI em português com bandeiras PNG
+- UI em português com bandeiras PNG e partidas agrupadas por rodada
 
 ## Scripts
 
 | Comando | Descrição |
 |---------|-----------|
 | `npm run dev` | Servidor local |
+| `npm run dev:host` | Local na rede Wi‑Fi |
 | `npm run sync:matches` | Atualizar partidas/placares no Supabase |
 | `npm run generate:matches-sql` | Regenerar `seed-matches-2026.sql` |
 | `npm run build` | Build produção |
+
+## Regras de pontuação
+
+- **3 pts** — placar exato
+- **1 pt** — acertou vencedor (inclui empate)
+- **0 pts** — errou

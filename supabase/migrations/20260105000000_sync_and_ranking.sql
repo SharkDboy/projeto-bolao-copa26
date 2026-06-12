@@ -98,7 +98,7 @@ stable
 as $$
   select
     p.user_id,
-    pr.display_name,
+    coalesce(pr.display_name, 'Jogador ' || left(p.user_id::text, 8)) as display_name,
     coalesce(sum(
       case
         when m.home_score is null or m.away_score is null then 0
@@ -112,8 +112,8 @@ as $$
       where m.home_score is not null and m.away_score is not null
     )::bigint as scored_predictions_count
   from public.predictions p
-  join public.profiles pr on pr.id = p.user_id
   join public.matches m on m.id = p.match_id
+  left join public.profiles pr on pr.id = p.user_id
   group by p.user_id, pr.display_name
   order by points desc, scored_predictions_count desc, predictions_count desc;
 $$;

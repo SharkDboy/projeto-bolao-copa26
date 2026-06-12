@@ -1,7 +1,7 @@
 -- Execute no SQL Editor do Supabase ANTES de compartilhar o app com amigos.
 -- Idempotente: pode rodar mais de uma vez.
 
--- Meta 5: colunas para sync openfootball/worldcup.json
+-- Meta 5: colunas para sync worldcup2026
 alter table public.matches
   add column if not exists external_id integer unique,
   add column if not exists status text,
@@ -79,6 +79,22 @@ create policy "predictions_update_own" on public.predictions
 -- Passo final: carregar as 104 partidas reais da Copa 2026
 -- Execute também o arquivo seed-matches-2026.sql neste mesmo SQL Editor.
 -- (Alternativa: npm run sync:matches com SUPABASE_SERVICE_ROLE_KEY eyJ...)
+
+-- Garante profile para usuários que ainda não têm linha em profiles
+insert into public.profiles (id, display_name)
+select
+  u.id,
+  coalesce(
+    u.raw_user_meta_data->>'display_name',
+    split_part(u.email, '@', 1),
+    'Jogador ' || left(u.id::text, 8)
+  )
+from auth.users u
+where not exists (
+  select 1
+  from public.profiles p
+  where p.id = u.id
+);
 
 -- Sync preserva placares + ranking com jogos pontuados (migration 20260105)
 create or replace function public.upsert_matches_sync(rows jsonb)
@@ -165,7 +181,7 @@ stable
 as $$
   select
     p.user_id,
-    pr.display_name,
+    coalesce(pr.display_name, 'Jogador ' || left(p.user_id::text, 8)) as display_name,
     coalesce(sum(
       case
         when m.home_score is null or m.away_score is null then 0
@@ -179,8 +195,8 @@ as $$
       where m.home_score is not null and m.away_score is not null
     )::bigint as scored_predictions_count
   from public.predictions p
-  join public.profiles pr on pr.id = p.user_id
   join public.matches m on m.id = p.match_id
+  left join public.profiles pr on pr.id = p.user_id
   group by p.user_id, pr.display_name
   order by points desc, scored_predictions_count desc, predictions_count desc;
 $$;

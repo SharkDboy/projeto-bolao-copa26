@@ -1,5 +1,5 @@
 /**
- * Gera supabase/seed-matches-2026.sql a partir do openfootball/worldcup.json
+ * Gera supabase/seed-matches-2026.sql a partir de rezarahiminia/worldcup2026
  * Uso: node scripts/generate-matches-sql.mjs
  */
 
@@ -9,7 +9,7 @@ import {
   DEFAULT_WORLDCUP_URL,
   fetchWorldCupMatches,
   rowsFromMatches,
-} from "../supabase/functions/_shared/openfootball.js";
+} from "../supabase/functions/_shared/worldcup2026.js";
 
 function sqlString(value) {
   if (value == null) return "null";
@@ -22,7 +22,7 @@ async function main() {
   const rows = rowsFromMatches(matches, now);
 
   const lines = [
-    "-- Partidas reais Copa 2026 (openfootball/worldcup.json)",
+    "-- Partidas reais Copa 2026 (rezarahiminia/worldcup2026)",
     "-- Idempotente: pode rodar mais de uma vez.",
     "-- Fonte: " + DEFAULT_WORLDCUP_URL,
     "",

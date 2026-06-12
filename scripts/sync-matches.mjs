@@ -1,6 +1,9 @@
 /**
- * Sincroniza partidas da Copa 2026 via openfootball/worldcup.json.
- * Preserva placares já gravados quando o JSON ainda não tem resultado.
+ * Sincroniza partidas da Copa 2026 via rezarahiminia/worldcup2026 (sem API key).
+ * Preserva placares já gravados quando a API ainda não tem resultado.
+ *
+ * Uso: npm run sync:matches
+ * Alternativa: Edge Function sync-match-results
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -10,7 +13,7 @@ import {
   DEFAULT_WORLDCUP_URL,
   fetchWorldCupMatches,
   rowsFromMatches,
-} from "../supabase/functions/_shared/openfootball.js";
+} from "../supabase/functions/_shared/worldcup2026.js";
 
 loadEnv();
 
@@ -49,7 +52,9 @@ async function main() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const worldcupUrl =
-    process.env.OPENFOOTBALL_WORLDCUP_URL ?? DEFAULT_WORLDCUP_URL;
+    process.env.WORLDCUP2026_API_URL ??
+    process.env.OPENFOOTBALL_WORLDCUP_URL ??
+    DEFAULT_WORLDCUP_URL;
 
   assertServiceRoleKey(serviceRoleKey);
 
