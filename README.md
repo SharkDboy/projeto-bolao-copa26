@@ -23,6 +23,14 @@ npm run dev
 
 Abra `http://localhost:5173`.
 
+## Cloud Agents (Cursor)
+
+Este repositório inclui `.cursor/environment.json` com:
+
+- `install: "npm install"`
+
+Assim, novos Cloud Agents instalam as dependências automaticamente antes das execuções, garantindo que `tsc` e `vite` estejam disponíveis para `npm run build`.
+
 ## Funcionalidades
 
 - Cadastro e login (Supabase Auth)

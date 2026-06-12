@@ -169,10 +169,15 @@ export default function MatchesPage() {
           <div className="space-y-8">
             {openByStage.map(({ stage, matches: stageMatches }) => (
               <div key={stage}>
-                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-500">
-                  {stage} · {stageMatches.length}{" "}
-                  {stageMatches.length === 1 ? "jogo" : "jogos"}
-                </h4>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+                    {stage} · {stageMatches.length}{" "}
+                    {stageMatches.length === 1 ? "jogo" : "jogos"}
+                  </h4>
+                  <span className="text-[11px] font-medium text-zinc-500">
+                    3 pts placar exato · 1 pt vencedor/empate
+                  </span>
+                </div>
                 <div className="space-y-4">
                   {stageMatches.map((match) => (
                     <MatchCard
@@ -198,10 +203,15 @@ export default function MatchesPage() {
           <div className="space-y-8">
             {closedByStage.map(({ stage, matches: stageMatches }) => (
               <div key={stage}>
-                <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-zinc-600">
-                  {stage} · {stageMatches.length}{" "}
-                  {stageMatches.length === 1 ? "jogo" : "jogos"}
-                </h4>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-600">
+                    {stage} · {stageMatches.length}{" "}
+                    {stageMatches.length === 1 ? "jogo" : "jogos"}
+                  </h4>
+                  <span className="text-[11px] font-medium text-zinc-500">
+                    3 pts placar exato · 1 pt vencedor/empate
+                  </span>
+                </div>
                 <div className="space-y-4">
                   {stageMatches.map((match) => (
                     <MatchCard
