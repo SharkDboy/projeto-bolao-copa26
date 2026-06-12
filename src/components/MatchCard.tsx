@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Match, Prediction } from "../types";
 import { calculateMatchPoints, hasResult } from "../lib/scoring";
+import { isLiveStatus, isMatchFinished } from "../lib/matchStatus";
 import { getTeamDisplayName } from "../lib/teamFlags";
 import TeamFlag from "./TeamFlag";
 
@@ -48,6 +49,7 @@ export default function MatchCard({
     match.resultHomeScore,
     match.resultAwayScore,
   );
+  const matchFinished = isMatchFinished(match);
 
   const pointsEarned =
     savedPrediction && resultAvailable
@@ -80,21 +82,38 @@ export default function MatchCard({
           <span className="rounded-full bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300 sm:px-3">
             {match.stage}
           </span>
-          {match.status === "LIVE" ||
-          match.status === "1H" ||
-          match.status === "2H" ||
-          match.status === "HT" ? (
+          {isLiveStatus(match.status) ? (
             <span className="rounded-full bg-red-950 px-2 py-1 text-xs font-semibold text-red-400">
               Ao vivo
+            </span>
+          ) : null}
+          {matchFinished ? (
+            <span className="rounded-full bg-amber-950 px-2 py-1 text-xs font-semibold text-amber-300">
+              Encerrado
             </span>
           ) : null}
         </div>
         <time className="text-xs text-zinc-500">{formatKickoff(match.kickoffAt)}</time>
       </div>
 
-      {resultAvailable && (
-        <p className="mb-4 text-center text-sm text-amber-400">
-          Resultado oficial: {match.resultHomeScore} × {match.resultAwayScore}
+      {matchFinished && resultAvailable && (
+        <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-300">
+            Placar final
+          </p>
+          <p className="mt-1 text-lg font-bold text-white">
+            {homeLabel}{" "}
+            <span className="text-amber-300">
+              {match.resultHomeScore} × {match.resultAwayScore}
+            </span>{" "}
+            {awayLabel}
+          </p>
+        </div>
+      )}
+
+      {matchFinished && !resultAvailable && (
+        <p className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-center text-sm text-amber-300">
+          Partida encerrada; placar final ainda indisponível.
         </p>
       )}
 

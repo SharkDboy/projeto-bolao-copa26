@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import MatchCard from "../components/MatchCard";
+import RoundAccordion from "../components/RoundAccordion";
 import { useAuth } from "../contexts/AuthContext";
-import { groupMatchesByStage } from "../lib/matchStages";
+import { groupMatchesByRound } from "../lib/matchStages";
+import { isMatchFinished } from "../lib/matchStatus";
 import { useRefreshInterval } from "../lib/useRefreshInterval";
 import { fetchMatches } from "../services/matches";
 import {
@@ -83,18 +85,16 @@ export default function MatchesPage() {
 
   const savedCount = Object.keys(predictions).length;
   const openMatches = matches.filter((m) => !m.isLocked);
-  const closedMatches = matches.filter((m) => m.isLocked);
+  const finishedMatches = matches.filter(isMatchFinished);
   const withResult = matches.filter(
     (m) => m.resultHomeScore != null && m.resultAwayScore != null,
   ).length;
-  const openByStage = useMemo(
-    () => groupMatchesByStage(openMatches),
-    [openMatches],
+  const rounds = useMemo(() => groupMatchesByRound(matches), [matches]);
+  const firstOpenRoundIndex = rounds.findIndex(({ matches: roundMatches }) =>
+    roundMatches.some((match) => !match.isLocked),
   );
-  const closedByStage = useMemo(
-    () => groupMatchesByStage(closedMatches),
-    [closedMatches],
-  );
+  const defaultOpenRoundIndex =
+    firstOpenRoundIndex === -1 ? 0 : firstOpenRoundIndex;
 
   if (loading) {
     return <p className="text-sm text-zinc-400">Carregando partidas...</p>;
@@ -119,7 +119,8 @@ export default function MatchesPage() {
         <h2 className="text-2xl font-bold text-white">Copa do Mundo 2026</h2>
         <p className="mt-1 text-sm text-zinc-400">
           {savedCount} de {matches.length} palpites salvos ·{" "}
-          {openMatches.length} abertas · {withResult} com resultado oficial
+          {openMatches.length} abertas · {finishedMatches.length} encerradas ·{" "}
+          {withResult} com placar oficial
         </p>
         {loadError && (
           <p className="mt-2 text-sm text-red-400">{loadError}</p>
@@ -129,73 +130,36 @@ export default function MatchesPage() {
         )}
       </div>
 
-      {openByStage.length > 0 && (
-        <section className="mb-8">
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-emerald-400">
-            Abertas para palpite
-          </h3>
-          <div className="space-y-8">
-            {openByStage.map(({ stage, matches: stageMatches }) => (
-              <div key={stage}>
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-                    {stage} · {stageMatches.length}{" "}
-                    {stageMatches.length === 1 ? "jogo" : "jogos"}
-                  </h4>
-                  <span className="text-[11px] font-medium text-zinc-500">
-                    3 pts placar exato · 1 pt vencedor/empate
-                  </span>
-                </div>
-                <div className="space-y-4">
-                  {stageMatches.map((match) => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      savedPrediction={predictions[match.id]}
-                      onSave={handleSave}
-                      saving={savingMatchId === match.id}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      <div className="space-y-4">
+        {rounds.map(({ round, matches: roundMatches }, index) => {
+          const openMatchesCount = roundMatches.filter(
+            (match) => !match.isLocked,
+          ).length;
+          const finishedMatchesCount = roundMatches.filter(isMatchFinished)
+            .length;
 
-      {closedByStage.length > 0 && (
-        <section>
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-zinc-500">
-            Encerradas
-          </h3>
-          <div className="space-y-8">
-            {closedByStage.map(({ stage, matches: stageMatches }) => (
-              <div key={stage}>
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <h4 className="text-xs font-medium uppercase tracking-wider text-zinc-600">
-                    {stage} · {stageMatches.length}{" "}
-                    {stageMatches.length === 1 ? "jogo" : "jogos"}
-                  </h4>
-                  <span className="text-[11px] font-medium text-zinc-500">
-                    3 pts placar exato · 1 pt vencedor/empate
-                  </span>
-                </div>
-                <div className="space-y-4">
-                  {stageMatches.map((match) => (
-                    <MatchCard
-                      key={match.id}
-                      match={match}
-                      savedPrediction={predictions[match.id]}
-                      onSave={handleSave}
-                      saving={savingMatchId === match.id}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+          return (
+            <RoundAccordion
+              key={round}
+              title={round}
+              matchesCount={roundMatches.length}
+              openMatchesCount={openMatchesCount}
+              finishedMatchesCount={finishedMatchesCount}
+              defaultOpen={index === defaultOpenRoundIndex}
+            >
+              {roundMatches.map((match) => (
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  savedPrediction={predictions[match.id]}
+                  onSave={handleSave}
+                  saving={savingMatchId === match.id}
+                />
+              ))}
+            </RoundAccordion>
+          );
+        })}
+      </div>
     </div>
   );
 }
