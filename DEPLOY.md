@@ -9,29 +9,26 @@
 
 ## Passo 2 — Partidas reais da Copa 2026 (Meta 5)
 
-Escolha **uma** opção:
+Dados via [openfootball/worldcup.json](https://github.com/openfootball/worldcup.json) — **sem API key**.
 
-### Opção A — Script local (mais rápido)
+### Opção A — Script local (recomendado)
 
-1. Crie conta em [api-football.com](https://www.api-football.com/) e copie a **API-KEY**
-2. No `.env`, adicione:
-   - `API_FOOTBALL_KEY=sua-chave`
-   - `SUPABASE_SERVICE_ROLE_KEY=sua service role` (Settings → API → service_role)
-3. Rode:
+1. No `.env`, adicione `SUPABASE_SERVICE_ROLE_KEY` (Settings → API → service_role)
+2. Rode:
 
 ```powershell
 npm run sync:matches
 ```
 
-Deve aparecer ~104 partidas sincronizadas.
+Deve aparecer **104 partidas sincronizadas**.
 
 ### Opção B — Edge Function + cron (produção)
 
 Siga [`supabase/functions/sync-match-results/README.md`](supabase/functions/sync-match-results/README.md):
 
-1. `supabase secrets set API_FOOTBALL_KEY=...` e `CRON_SECRET=...`
+1. `supabase secrets set CRON_SECRET=...`
 2. `supabase functions deploy sync-match-results`
-3. Dispare uma vez com `curl` ou agende a cada 15 min
+3. Dispare uma vez com `curl` ou agende a cada 6 h
 
 ## Passo 3 — Vercel (5 min)
 
@@ -59,7 +56,7 @@ Siga [`supabase/functions/sync-match-results/README.md`](supabase/functions/sync
 
 1. Abra a URL Vercel em aba anônima
 2. **Criar conta** → palpitar nas partidas com kickoff futuro
-3. Partidas já realizadas aparecem em **Encerradas** com pontuação no ranking
+3. Partidas encerradas ou com resultado aparecem em **Encerradas**
 4. Envie o link para seus amigos
 
 ## Alternativa: mesma rede Wi‑Fi (sem Vercel)

@@ -9,4 +9,4 @@ create index if not exists matches_external_id_idx on public.matches (external_i
 
 -- Permite upsert de partidas pela Edge Function (service role bypassa RLS;
 -- esta policy cobre caso usemos role authenticated com claim especial no futuro)
-comment on column public.matches.external_id is 'ID do fixture na API-Football (api-sports.io)';
+comment on column public.matches.external_id is 'ID estável da partida (número openfootball ou hash)';
