@@ -5,7 +5,12 @@ import { useAuth } from "../contexts/AuthContext";
 import { groupMatchesByRound } from "../lib/matchStages";
 import { isMatchFinished } from "../lib/matchStatus";
 import { useRefreshInterval } from "../lib/useRefreshInterval";
-import { fetchMatches } from "../services/matches";
+import {
+  fetchMatches,
+  mergeMatchUpdate,
+  normalizeMatches,
+  subscribeToMatchChanges,
+} from "../services/matches";
 import {
   fetchUserPredictions,
   upsertPrediction,
@@ -52,8 +57,22 @@ export default function MatchesPage() {
     load(true);
   }, [load]);
 
+  useEffect(() => {
+    return subscribeToMatchChanges((match) => {
+      setMatches((current) => mergeMatchUpdate(current, match));
+    });
+  }, []);
+
   useRefreshInterval(() => {
-    load(false);
+    setMatches((current) =>
+      normalizeMatches(
+        current.map((match) =>
+          new Date(match.kickoffAt).getTime() <= Date.now()
+            ? { ...match, isLocked: true }
+            : match,
+        ),
+      ),
+    );
   }, REFRESH_MS);
 
   async function handleSave(prediction: Prediction) {

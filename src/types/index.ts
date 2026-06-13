@@ -1,5 +1,6 @@
 export interface Match {
   id: string;
+  externalId?: number | null;
   homeTeam: string;
   awayTeam: string;
   kickoffAt: string;
