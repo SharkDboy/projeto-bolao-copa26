@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import RankingTable from "../components/RankingTable";
 import { useAuth } from "../contexts/AuthContext";
 import { useRefreshInterval } from "../lib/useRefreshInterval";
+import { subscribeToMatchChanges } from "../services/matches";
 import { fetchRanking } from "../services/ranking";
 import type { RankingEntry } from "../types";
 
@@ -30,6 +31,12 @@ export default function RankingPage() {
 
   useEffect(() => {
     load(true);
+  }, [load]);
+
+  useEffect(() => {
+    return subscribeToMatchChanges(() => {
+      load(false);
+    });
   }, [load]);
 
   useRefreshInterval(() => {
