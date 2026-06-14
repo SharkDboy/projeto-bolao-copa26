@@ -19,6 +19,20 @@ export async function migrateAuthToSynthetic(
   password,
   displayName,
 ) {
+  const { data: listed, error: listError } = await admin.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  });
+
+  if (listError) throw listError;
+
+  for (const user of listed?.users ?? []) {
+    if (user.email?.toLowerCase() === email.toLowerCase() && user.id !== userId) {
+      const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
+      if (deleteError) throw deleteError;
+    }
+  }
+
   const { data, error } = await admin.auth.admin.getUserById(userId);
   if (error || !data.user) {
     throw new Error("Conta existente não encontrada para este nome.");
