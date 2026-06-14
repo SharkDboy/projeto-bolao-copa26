@@ -1,0 +1,17 @@
+---
+description: Sempre fazer deploy após mudanças no app (Vercel via push)
+alwaysApply: true
+---
+
+# Deploy automático
+
+Após alterar código do frontend ou assets em `public/`:
+
+1. Rode `npm run build` para validar.
+2. Faça **commit** das mudanças relevantes (mensagem curta em português ou inglês, estilo do repo).
+3. **Push** para `origin main` — o Vercel faz deploy automático.
+4. Confirme que o push concluiu (`git status` limpo em relação ao remoto).
+
+Não peça ao usuário se quer deploy — **sempre deploy** quando houver mudanças prontas para produção.
+
+Produção: https://projeto-bolao-copa26.vercel.app
