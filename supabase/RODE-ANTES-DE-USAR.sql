@@ -97,6 +97,23 @@ where not exists (
 );
 
 -- Entrada por nome: um jogador por nome (case-insensitive)
+-- Desduplica nomes já existentes (mantém o perfil mais antigo; renomeia os demais)
+with ranked as (
+  select
+    id,
+    display_name,
+    row_number() over (
+      partition by lower(trim(display_name))
+      order by created_at asc nulls last, id asc
+    ) as rn
+  from public.profiles
+)
+update public.profiles p
+set display_name = p.display_name || ' #' || r.rn
+from ranked r
+where p.id = r.id
+  and r.rn > 1;
+
 create unique index if not exists profiles_display_name_lower_idx
   on public.profiles (lower(trim(display_name)));
 

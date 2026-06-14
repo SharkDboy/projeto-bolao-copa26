@@ -5,6 +5,10 @@ import {
   syntheticEmail,
   validateDisplayName,
 } from "./lib/playerAuth.mjs";
+import {
+  resolveSession,
+  upsertProfile,
+} from "./lib/enterWithNameFlow.mjs";
 
 function resolveAuthNameSecret(serviceRoleKey) {
   if (process.env.AUTH_NAME_SECRET?.trim()) {
@@ -37,7 +41,7 @@ export default async function handler(req, res) {
     process.env.VITE_SUPABASE_URL ??
     process.env.SUPABASE_URL ??
     process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
   if (!supabaseUrl || !serviceRoleKey) {
     return res.status(500).json({
@@ -67,58 +71,14 @@ export default async function handler(req, res) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    let session = null;
-    let userId = null;
+    const { session, userId } = await resolveSession(admin, {
+      email,
+      password,
+      displayName,
+      normalized,
+    });
 
-    const signIn = await admin.auth.signInWithPassword({ email, password });
-    if (signIn.error && signIn.error.message !== "Invalid login credentials") {
-      return res.status(500).json({ error: signIn.error.message });
-    }
-
-    session = signIn.data.session;
-    userId = signIn.data.user?.id;
-
-    if (!session) {
-      const signUp = await admin.auth.signUp({
-        email,
-        password,
-        options: { data: { display_name: displayName } },
-      });
-
-      if (signUp.error) {
-        const retry = await admin.auth.signInWithPassword({ email, password });
-        if (retry.error || !retry.data.session) {
-          return res.status(500).json({
-            error: signUp.error.message ?? "Não foi possível criar a conta.",
-          });
-        }
-        session = retry.data.session;
-        userId = retry.data.user?.id;
-      } else {
-        session = signUp.data.session;
-        userId = signUp.data.user?.id;
-        if (!session) {
-          const retry = await admin.auth.signInWithPassword({ email, password });
-          session = retry.data.session ?? null;
-          userId = retry.data.user?.id ?? userId;
-        }
-      }
-    }
-
-    if (!session || !userId) {
-      return res.status(500).json({
-        error: "Sessão não criada. Desative confirmação de e-mail no Supabase.",
-      });
-    }
-
-    const { error: profileError } = await admin.from("profiles").upsert(
-      { id: userId, display_name: displayName },
-      { onConflict: "id" },
-    );
-
-    if (profileError) {
-      return res.status(500).json({ error: profileError.message });
-    }
+    await upsertProfile(admin, userId, displayName);
 
     return res.status(200).json({
       access_token: session.access_token,
@@ -127,8 +87,8 @@ export default async function handler(req, res) {
       display_name: displayName,
     });
   } catch (err) {
-    return res.status(500).json({
-      error: err instanceof Error ? err.message : "Erro desconhecido.",
-    });
+    const message = err instanceof Error ? err.message : "Erro desconhecido.";
+    const status = message.includes("já está em uso") ? 409 : 500;
+    return res.status(status).json({ error: message });
   }
 }

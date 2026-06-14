@@ -1,4 +1,5 @@
--- Um jogador por nome (case-insensitive) para entrada só com nome.
+-- Rode ANTES do índice único se RODE-ANTES-DE-USAR.sql falhar com 23505.
+-- Mantém o perfil mais antigo; renomeia duplicatas (ex.: "dennys" → "dennys #2").
 
 with ranked as (
   select
