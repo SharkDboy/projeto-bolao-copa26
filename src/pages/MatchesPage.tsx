@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import MatchCard from "../components/MatchCard";
 import RoundAccordion from "../components/RoundAccordion";
 import { useAuth } from "../contexts/AuthContext";
 import { groupMatchesByRound } from "../lib/matchStages";
-import { isMatchFinished } from "../lib/matchStatus";
+import {
+  isMatchOpen,
+  splitMatchesByCategory,
+} from "../lib/matchStatus";
 import { useRefreshInterval } from "../lib/useRefreshInterval";
 import { fetchMatches } from "../services/matches";
 import {
@@ -84,14 +86,13 @@ export default function MatchesPage() {
   }
 
   const savedCount = Object.keys(predictions).length;
-  const openMatches = matches.filter((m) => !m.isLocked);
-  const finishedMatches = matches.filter(isMatchFinished);
-  const withResult = matches.filter(
-    (m) => m.resultHomeScore != null && m.resultAwayScore != null,
-  ).length;
+  const categoryTotals = useMemo(
+    () => splitMatchesByCategory(matches),
+    [matches],
+  );
   const rounds = useMemo(() => groupMatchesByRound(matches), [matches]);
   const firstOpenRoundIndex = rounds.findIndex(({ matches: roundMatches }) =>
-    roundMatches.some((match) => !match.isLocked),
+    roundMatches.some(isMatchOpen),
   );
   const defaultOpenRoundIndex =
     firstOpenRoundIndex === -1 ? 0 : firstOpenRoundIndex;
@@ -119,8 +120,9 @@ export default function MatchesPage() {
         <h2 className="text-2xl font-bold text-white">Copa do Mundo 2026</h2>
         <p className="mt-1 text-sm text-zinc-400">
           {savedCount} de {matches.length} palpites salvos ·{" "}
-          {openMatches.length} abertas · {finishedMatches.length} encerradas ·{" "}
-          {withResult} com placar oficial
+          {categoryTotals.open.length} abertos ·{" "}
+          {categoryTotals.inProgress.length} em andamento ·{" "}
+          {categoryTotals.finished.length} finalizados
         </p>
         {loadError && (
           <p className="mt-2 text-sm text-red-400">{loadError}</p>
@@ -132,31 +134,25 @@ export default function MatchesPage() {
 
       <div className="space-y-4">
         {rounds.map(({ round, matches: roundMatches }, index) => {
-          const openMatchesCount = roundMatches.filter(
-            (match) => !match.isLocked,
-          ).length;
-          const finishedMatchesCount = roundMatches.filter(isMatchFinished)
-            .length;
+          const { open, inProgress, finished } =
+            splitMatchesByCategory(roundMatches);
 
           return (
             <RoundAccordion
               key={round}
               title={round}
               matchesCount={roundMatches.length}
-              openMatchesCount={openMatchesCount}
-              finishedMatchesCount={finishedMatchesCount}
+              openCount={open.length}
+              inProgressCount={inProgress.length}
+              finishedCount={finished.length}
+              open={open}
+              inProgress={inProgress}
+              finished={finished}
+              predictions={predictions}
+              onSave={handleSave}
+              savingMatchId={savingMatchId}
               defaultOpen={index === defaultOpenRoundIndex}
-            >
-              {roundMatches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  savedPrediction={predictions[match.id]}
-                  onSave={handleSave}
-                  saving={savingMatchId === match.id}
-                />
-              ))}
-            </RoundAccordion>
+            />
           );
         })}
       </div>

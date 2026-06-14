@@ -118,4 +118,5 @@ as $$
   order by points desc, scored_predictions_count desc, predictions_count desc;
 $$;
 
+revoke all on function public.get_ranking() from public;
 grant execute on function public.get_ranking() to authenticated;

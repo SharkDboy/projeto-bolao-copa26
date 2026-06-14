@@ -1,23 +1,44 @@
 export const DEFAULT_WORLDCUP_URL =
   "https://worldcup26.ir/get/games";
 
-const ALLOWED_WORLDCUP_URL_PREFIXES = [
+const ALLOWED_EXACT_URLS = new Set([
   "https://worldcup26.ir/get/games",
-  "https://raw.githubusercontent.com/rezarahiminia/worldcup2026/",
-];
+]);
+
+const ALLOWED_GITHUB_PREFIX =
+  "https://raw.githubusercontent.com/rezarahiminia/worldcup2026/";
 
 /** Restringe fetch da Edge Function a URLs confiáveis da fonte da Copa 2026 */
 export function resolveWorldCupUrl(url = DEFAULT_WORLDCUP_URL) {
   const trimmed = url.trim();
-  const allowed = ALLOWED_WORLDCUP_URL_PREFIXES.some((prefix) =>
-    trimmed.startsWith(prefix),
-  );
-  if (!allowed) {
-    throw new Error(
-      "WORLDCUP2026_API_URL deve usar worldcup26.ir/get/games ou raw.githubusercontent.com/rezarahiminia/worldcup2026",
-    );
+  let parsed;
+
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new Error("WORLDCUP2026_API_URL inválida.");
   }
-  return trimmed;
+
+  if (parsed.protocol !== "https:") {
+    throw new Error("WORLDCUP2026_API_URL deve usar HTTPS.");
+  }
+
+  const withoutQuery = `${parsed.origin}${parsed.pathname}`.replace(/\/$/, "");
+
+  if (ALLOWED_EXACT_URLS.has(withoutQuery)) {
+    return trimmed;
+  }
+
+  if (
+    parsed.hostname === "raw.githubusercontent.com" &&
+    trimmed.startsWith(ALLOWED_GITHUB_PREFIX)
+  ) {
+    return trimmed;
+  }
+
+  throw new Error(
+    "WORLDCUP2026_API_URL deve ser https://worldcup26.ir/get/games ou raw.githubusercontent.com/rezarahiminia/worldcup2026/...",
+  );
 }
 
 /**

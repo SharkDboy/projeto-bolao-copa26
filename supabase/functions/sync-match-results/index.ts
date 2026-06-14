@@ -45,9 +45,7 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const worldcupUrl =
-    Deno.env.get("WORLDCUP2026_API_URL") ??
-    Deno.env.get("OPENFOOTBALL_WORLDCUP_URL") ??
-    DEFAULT_WORLDCUP_URL;
+    Deno.env.get("WORLDCUP2026_API_URL") ?? DEFAULT_WORLDCUP_URL;
 
   if (!supabaseUrl || !serviceRoleKey) {
     return Response.json({ error: "Supabase config ausente" }, { status: 500 });

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import RankingTable from "../components/RankingTable";
 import { useAuth } from "../contexts/AuthContext";
 import { useRefreshInterval } from "../lib/useRefreshInterval";
-import { fetchRanking } from "../services/ranking";
+import { fetchRanking, RankingFetchError } from "../services/ranking";
 import type { RankingEntry } from "../types";
 
 const REFRESH_MS = 60_000;
@@ -21,8 +21,12 @@ export default function RankingPage() {
       const data = await fetchRanking();
       setEntries(data);
       setLastUpdated(new Date());
-    } catch {
-      setError("Não foi possível carregar o ranking.");
+    } catch (err) {
+      if (err instanceof RankingFetchError) {
+        setError(err.message);
+      } else {
+        setError("Não foi possível carregar o ranking.");
+      }
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -62,7 +66,19 @@ export default function RankingPage() {
             {myEntry.scoredPredictionsCount} jogos pontuados)
           </p>
         )}
-        {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+        {error && (
+          <p className="mt-2 text-sm text-red-400">
+            {error}
+            {error.includes("RODE-ANTES-DE-USAR") && (
+              <>
+                {" "}
+                Depois, rode também{" "}
+                <code className="text-zinc-300">seed-matches-2026.sql</code>{" "}
+                para popular placares.
+              </>
+            )}
+          </p>
+        )}
       </div>
 
       {loading ? (

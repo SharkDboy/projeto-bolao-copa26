@@ -22,7 +22,8 @@ Assim, novos Cloud Agents instalam as dependências automaticamente antes das ex
 
 ## Funcionalidades
 
-- Auth, palpites na nuvem, ranking (3 pts exato / 1 pt vencedor)
+- Entrada só com **nome** (mesma conta em qualquer aparelho)
+- Palpites na nuvem, ranking (3 pts exato / 1 pt vencedor)
 - **104 partidas reais** da Copa 2026 via [rezarahiminia/worldcup2026](https://github.com/rezarahiminia/worldcup2026) (sem API key)
 - Sync de placares → ranking atualiza automaticamente
 - UI em português com bandeiras PNG e partidas agrupadas por rodada

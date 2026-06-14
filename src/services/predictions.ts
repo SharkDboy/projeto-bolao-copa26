@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase";
 import type { Prediction } from "../types";
+import { isValidScore, normalizeScore } from "../lib/predictionValidation";
 
 interface PredictionRow {
   match_id: string;
@@ -32,12 +33,19 @@ export async function upsertPrediction(
   userId: string,
   prediction: Prediction,
 ): Promise<void> {
+  const homeScore = normalizeScore(prediction.homeScore);
+  const awayScore = normalizeScore(prediction.awayScore);
+
+  if (!isValidScore(homeScore) || !isValidScore(awayScore)) {
+    throw new Error("Placar inválido. Use números inteiros entre 0 e 20.");
+  }
+
   const { error } = await supabase.from("predictions").upsert(
     {
       user_id: userId,
       match_id: prediction.matchId,
-      home_score: prediction.homeScore,
-      away_score: prediction.awayScore,
+      home_score: homeScore,
+      away_score: awayScore,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,match_id" },

@@ -52,9 +52,7 @@ async function main() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const worldcupUrl =
-    process.env.WORLDCUP2026_API_URL ??
-    process.env.OPENFOOTBALL_WORLDCUP_URL ??
-    DEFAULT_WORLDCUP_URL;
+    process.env.WORLDCUP2026_API_URL ?? DEFAULT_WORLDCUP_URL;
 
   assertServiceRoleKey(serviceRoleKey);
 

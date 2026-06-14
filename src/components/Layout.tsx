@@ -13,7 +13,7 @@ export default function Layout() {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-zinc-800 bg-zinc-900/95 backdrop-blur-sm">
-        <div className="mx-auto max-w-3xl px-3 py-3 sm:px-4 sm:py-4">
+        <div className="mx-auto max-w-7xl px-3 py-3 sm:px-4 sm:py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-widest text-amber-400">
@@ -55,13 +55,13 @@ export default function Layout() {
                 onClick={handleSignOut}
                 className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
               >
-                Sair
+                Trocar nome
               </button>
             </nav>
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-3 py-6 sm:px-4 sm:py-8">
+      <main className="mx-auto max-w-7xl px-3 py-6 sm:px-4 sm:py-8">
         <Outlet />
       </main>
     </div>

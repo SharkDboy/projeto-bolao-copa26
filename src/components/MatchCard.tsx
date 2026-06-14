@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { Match, Prediction } from "../types";
 import { calculateMatchPoints, hasResult } from "../lib/scoring";
-import { isLiveStatus, isMatchFinished } from "../lib/matchStatus";
+import { isMatchFinished } from "../lib/matchStatus";
+import { normalizeScore, parseScoreInput } from "../lib/predictionValidation";
 import { getTeamDisplayName } from "../lib/teamFlags";
 import TeamFlag from "./TeamFlag";
 
@@ -21,6 +22,38 @@ function formatKickoff(iso: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+const scoreFieldClass =
+  "w-10 min-w-[2.5rem] shrink-0 border-0 bg-transparent p-0 text-center text-3xl font-bold text-white focus:outline-none focus:ring-0 disabled:cursor-default disabled:opacity-90 sm:w-14 sm:text-4xl [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+
+interface ScoreFieldProps {
+  value: number;
+  label: string;
+  disabled: boolean;
+  onChange: (value: number) => void;
+}
+
+function ScoreField({ value, label, disabled, onChange }: ScoreFieldProps) {
+  if (disabled) {
+    return (
+      <span className={scoreFieldClass} aria-label={`Placar ${label}`}>
+        {value}
+      </span>
+    );
+  }
+
+  return (
+    <input
+      type="number"
+      min={0}
+      max={20}
+      aria-label={`Placar ${label}`}
+      value={value}
+      onChange={(e) => onChange(parseScoreInput(e.target.value))}
+      className={scoreFieldClass}
+    />
+  );
 }
 
 export default function MatchCard({
@@ -62,128 +95,116 @@ export default function MatchCard({
   function handleSave() {
     onSave({
       matchId: match.id,
-      homeScore,
-      awayScore,
+      homeScore: normalizeScore(homeScore),
+      awayScore: normalizeScore(awayScore),
     });
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 2000);
   }
 
-  const scoreInputClass =
-    "w-14 rounded-lg border border-zinc-700 bg-zinc-800 py-2 text-center text-lg font-bold text-white focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50 sm:w-16";
-
   const homeLabel = getTeamDisplayName(match.homeTeam);
   const awayLabel = getTeamDisplayName(match.awayTeam);
 
   return (
-    <article className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 shadow-lg sm:p-5">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300 sm:px-3">
-            {match.stage}
-          </span>
-          {isLiveStatus(match.status) ? (
-            <span className="rounded-full bg-red-950 px-2 py-1 text-xs font-semibold text-red-400">
-              Ao vivo
-            </span>
-          ) : null}
-          {matchFinished ? (
-            <span className="rounded-full bg-amber-950 px-2 py-1 text-xs font-semibold text-amber-300">
-              Encerrado
-            </span>
-          ) : null}
-        </div>
+    <article className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-lg">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 pb-3 pt-4 sm:px-5">
+        <span className="rounded-full bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300 sm:px-3">
+          {match.stage}
+        </span>
         <time className="text-xs text-zinc-500">{formatKickoff(match.kickoffAt)}</time>
       </div>
 
+      <div className="flex items-stretch border-y border-zinc-800">
+        <div className="flex min-w-0 flex-1 items-stretch">
+          <TeamFlag
+            teamName={match.homeTeam}
+            size="panel"
+            panelSide="left"
+          />
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-1 px-2 py-3 sm:gap-2 sm:px-3">
+            <span className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-white sm:text-base">
+              {homeLabel}
+            </span>
+            <ScoreField
+              value={homeScore}
+              label={homeLabel}
+              disabled={disabled}
+              onChange={setHomeScore}
+            />
+          </div>
+        </div>
+
+        <span
+          className="flex shrink-0 items-center px-1 text-2xl font-bold text-zinc-500 sm:px-2 sm:text-3xl"
+          aria-hidden="true"
+        >
+          ×
+        </span>
+
+        <div className="flex min-w-0 flex-1 items-stretch">
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-1 px-2 py-3 sm:gap-2 sm:px-3">
+            <ScoreField
+              value={awayScore}
+              label={awayLabel}
+              disabled={disabled}
+              onChange={setAwayScore}
+            />
+            <span className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-white sm:text-base">
+              {awayLabel}
+            </span>
+          </div>
+          <TeamFlag
+            teamName={match.awayTeam}
+            size="panel"
+            panelSide="right"
+          />
+        </div>
+      </div>
+
       {matchFinished && resultAvailable && (
-        <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-amber-300">
-            Placar final
-          </p>
-          <p className="mt-1 text-lg font-bold text-white">
-            {homeLabel}{" "}
-            <span className="text-amber-300">
+        <div className="border-t border-zinc-800 px-4 py-3 text-center sm:px-5">
+          <p className="text-xs text-amber-300/90">
+            Placar final:{" "}
+            <span className="font-bold text-amber-300">
               {match.resultHomeScore} × {match.resultAwayScore}
-            </span>{" "}
-            {awayLabel}
+            </span>
+          </p>
+          <p className="mt-1.5 text-sm">
+            {savedPrediction ? (
+              pointsEarned! > 0 ? (
+                <span className="font-semibold text-emerald-400">
+                  Bolão: +{pointsEarned} pts
+                </span>
+              ) : (
+                <span className="text-zinc-400">
+                  Bolão: 0 pts — errou o palpite
+                </span>
+              )
+            ) : (
+              <span className="text-zinc-500">Bolão: sem palpite</span>
+            )}
           </p>
         </div>
       )}
 
       {matchFinished && !resultAvailable && (
-        <p className="mb-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-center text-sm text-amber-300">
+        <p className="border-t border-zinc-800 px-4 py-3 text-center text-sm text-amber-300 sm:px-5">
           Partida encerrada; placar final ainda indisponível.
         </p>
       )}
 
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 sm:gap-x-4">
-        <p className="truncate text-right text-sm font-semibold text-white sm:text-base">
-          {homeLabel}
-        </p>
-
-        <div className="flex items-end justify-center gap-2 sm:gap-3">
-          <div className="flex flex-col items-center gap-1.5">
-            <TeamFlag teamName={match.homeTeam} size="lg" />
-            <input
-              type="number"
-              min={0}
-              max={20}
-              aria-label={`Placar ${homeLabel}`}
-              value={homeScore}
-              disabled={disabled}
-              onChange={(e) => setHomeScore(Number(e.target.value))}
-              className={scoreInputClass}
-            />
-          </div>
-
-          <span className="pb-2 text-lg font-bold text-zinc-600 sm:text-xl">×</span>
-
-          <div className="flex flex-col items-center gap-1.5">
-            <TeamFlag teamName={match.awayTeam} size="lg" />
-            <input
-              type="number"
-              min={0}
-              max={20}
-              aria-label={`Placar ${awayLabel}`}
-              value={awayScore}
-              disabled={disabled}
-              onChange={(e) => setAwayScore(Number(e.target.value))}
-              className={scoreInputClass}
-            />
-          </div>
+      {!disabled && (
+        <div className="px-4 py-3 sm:px-5">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {saving ? "Salvando..." : justSaved ? "Salvo!" : "Salvar palpite"}
+          </button>
         </div>
-
-        <p className="truncate text-left text-sm font-semibold text-white sm:text-base">
-          {awayLabel}
-        </p>
-      </div>
-
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-1">
-          {savedPrediction ? (
-            <span className="text-sm text-emerald-400">
-              Palpite: {savedPrediction.homeScore} × {savedPrediction.awayScore}
-            </span>
-          ) : (
-            <span className="text-sm text-zinc-500">Nenhum palpite salvo</span>
-          )}
-          {pointsEarned !== null && (
-            <span className="text-sm font-semibold text-amber-400">
-              +{pointsEarned} pts
-            </span>
-          )}
-        </div>
-
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={disabled || saving}
-          className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-        >
-          {saving ? "Salvando..." : justSaved ? "Salvo!" : "Salvar palpite"}
-        </button>
-      </div>
+      )}
     </article>
   );
 }

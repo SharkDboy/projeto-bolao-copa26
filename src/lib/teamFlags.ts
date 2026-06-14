@@ -204,7 +204,7 @@ export function getTeamDisplayName(teamName: string): string {
   return lookupTeam(trimmed)?.pt ?? trimmed;
 }
 
-export function getTeamFlagCode(teamName: string): string | null {
+function getTeamFlagCode(teamName: string): string | null {
   const trimmed = teamName.trim();
   if (!trimmed || trimmed.toUpperCase() === "TBD") return null;
   const code = lookupTeam(trimmed)?.flag;

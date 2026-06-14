@@ -96,6 +96,10 @@ where not exists (
   where p.id = u.id
 );
 
+-- Entrada por nome: um jogador por nome (case-insensitive)
+create unique index if not exists profiles_display_name_lower_idx
+  on public.profiles (lower(trim(display_name)));
+
 -- Sync preserva placares + ranking com jogos pontuados (migration 20260105)
 create or replace function public.upsert_matches_sync(rows jsonb)
 returns jsonb
@@ -116,8 +120,8 @@ begin
 
   for item in select value from jsonb_array_elements(rows)
   loop
-    new_home := (item->>'home_score')::int;
-    new_away := (item->>'away_score')::int;
+    new_home := nullif(item->>'home_score', '')::int;
+    new_away := nullif(item->>'away_score', '')::int;
 
     insert into public.matches (
       id, external_id, home_team, away_team, kickoff_at, stage,
@@ -201,4 +205,5 @@ as $$
   order by points desc, scored_predictions_count desc, predictions_count desc;
 $$;
 
+revoke all on function public.get_ranking() from public;
 grant execute on function public.get_ranking() to authenticated;

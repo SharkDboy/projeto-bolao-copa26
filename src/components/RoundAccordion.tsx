@@ -1,12 +1,20 @@
-import { type ReactNode, useId, useState } from "react";
+import { useId, useState } from "react";
+import MatchColumnGrid from "./MatchColumnGrid";
+import type { Match, Prediction } from "../types";
 
 interface RoundAccordionProps {
   title: string;
   matchesCount: number;
-  openMatchesCount: number;
-  finishedMatchesCount: number;
+  openCount: number;
+  inProgressCount: number;
+  finishedCount: number;
+  open: Match[];
+  inProgress: Match[];
+  finished: Match[];
+  predictions: Record<string, Prediction>;
+  onSave: (prediction: Prediction) => void;
+  savingMatchId: string | null;
   defaultOpen?: boolean;
-  children: ReactNode;
 }
 
 function matchCountLabel(count: number) {
@@ -16,21 +24,27 @@ function matchCountLabel(count: number) {
 export default function RoundAccordion({
   title,
   matchesCount,
-  openMatchesCount,
-  finishedMatchesCount,
+  openCount,
+  inProgressCount,
+  finishedCount,
+  open,
+  inProgress,
+  finished,
+  predictions,
+  onSave,
+  savingMatchId,
   defaultOpen = false,
-  children,
 }: RoundAccordionProps) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [openState, setOpenState] = useState(defaultOpen);
   const contentId = useId();
 
   return (
     <section className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/70 shadow-lg">
       <button
         type="button"
-        aria-expanded={open}
+        aria-expanded={openState}
         aria-controls={contentId}
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => setOpenState((current) => !current)}
         className="flex w-full flex-col gap-3 p-4 text-left transition-colors hover:bg-zinc-800/50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-zinc-950 sm:p-5"
       >
         <div className="flex items-start justify-between gap-4">
@@ -48,7 +62,7 @@ export default function RoundAccordion({
             viewBox="0 0 20 20"
             fill="currentColor"
             className={`mt-1 h-5 w-5 shrink-0 text-zinc-400 transition-transform ${
-              open ? "rotate-180" : ""
+              openState ? "rotate-180" : ""
             }`}
           >
             <path
@@ -63,28 +77,37 @@ export default function RoundAccordion({
           <span className="rounded-full bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-300">
             {matchCountLabel(matchesCount)}
           </span>
-          {openMatchesCount > 0 && (
+          {openCount > 0 && (
             <span className="rounded-full bg-emerald-950 px-2.5 py-1 text-xs font-semibold text-emerald-300">
-              {openMatchesCount} abertas
+              {openCount} abertos
             </span>
           )}
-          {finishedMatchesCount > 0 && (
+          {inProgressCount > 0 && (
+            <span className="rounded-full bg-sky-950 px-2.5 py-1 text-xs font-semibold text-sky-300">
+              {inProgressCount} em andamento
+            </span>
+          )}
+          {finishedCount > 0 && (
             <span className="rounded-full bg-amber-950 px-2.5 py-1 text-xs font-semibold text-amber-300">
-              {finishedMatchesCount} encerradas
+              {finishedCount} finalizados
             </span>
           )}
-          <span className="text-[11px] font-medium text-zinc-500">
-            3 pts placar exato · 1 pt vencedor/empate
-          </span>
         </div>
       </button>
 
       <div
         id={contentId}
-        hidden={!open}
+        hidden={!openState}
         className="border-t border-zinc-800 bg-zinc-950/30 p-4 sm:p-5"
       >
-        <div className="space-y-4">{children}</div>
+        <MatchColumnGrid
+          open={open}
+          inProgress={inProgress}
+          finished={finished}
+          predictions={predictions}
+          onSave={onSave}
+          savingMatchId={savingMatchId}
+        />
       </div>
     </section>
   );

@@ -56,5 +56,3 @@ export function groupMatchesByRound(matches: Match[]) {
       ),
     }));
 }
-
-export const groupMatchesByStage = groupMatchesByRound;
