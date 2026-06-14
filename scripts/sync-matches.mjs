@@ -1,9 +1,5 @@
 /**
- * Sincroniza partidas da Copa 2026 via rezarahiminia/worldcup2026 (sem API key).
- * Preserva placares já gravados quando a API ainda não tem resultado.
- *
- * Uso: npm run sync:matches
- * Alternativa: Edge Function sync-match-results
+ * Sincroniza partidas — usa RPC upsert_matches_sync ou fallback direto na tabela.
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -14,6 +10,7 @@ import {
   fetchWorldCupMatches,
   rowsFromMatches,
 } from "../supabase/functions/_shared/worldcup2026.js";
+import { upsertMatchesDirect } from "./lib/upsertMatchesDirect.mjs";
 
 loadEnv();
 
@@ -34,18 +31,24 @@ function loadEnv() {
 }
 
 function assertServiceRoleKey(key) {
-  if (!key) {
-    console.error(
-      "Defina SUPABASE_SERVICE_ROLE_KEY no .env (JWT eyJ... em Settings → API → service_role)",
-    );
+  if (!key?.startsWith("eyJ")) {
+    console.error("SUPABASE_SERVICE_ROLE_KEY inválida ou ausente (JWT eyJ...).");
     process.exit(1);
   }
-  if (!key.startsWith("eyJ")) {
-    console.error(
-      "SUPABASE_SERVICE_ROLE_KEY inválida: use service_role (eyJ...), não publishable.",
-    );
-    process.exit(1);
+}
+
+async function upsertBatch(supabase, batch, useRpc) {
+  if (useRpc) {
+    const { data, error } = await supabase.rpc("upsert_matches_sync", {
+      rows: batch,
+    });
+    if (error) throw error;
+    return {
+      upserted: data?.upserted ?? batch.length,
+      resultsUpdated: data?.results_updated ?? 0,
+    };
   }
+  return upsertMatchesDirect(supabase, batch);
 }
 
 async function main() {
@@ -61,6 +64,15 @@ async function main() {
   console.log(`${matches.length} partidas no JSON`);
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
+  const { error: rpcProbe } = await supabase.rpc("upsert_matches_sync", {
+    rows: [],
+  });
+  const useRpc = !rpcProbe?.message?.includes("Could not find the function");
+
+  if (!useRpc) {
+    console.log("RPC upsert_matches_sync ausente — usando upsert direto.");
+  }
+
   const now = new Date().toISOString();
   const rows = rowsFromMatches(matches, now);
   let upserted = 0;
@@ -68,17 +80,9 @@ async function main() {
 
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE);
-    const { data, error } = await supabase.rpc("upsert_matches_sync", {
-      rows: batch,
-    });
-    if (error) {
-      throw new Error(
-        `${error.message}\n` +
-          "Rode a migration 20260105000000_sync_and_ranking.sql no Supabase.",
-      );
-    }
-    upserted += data?.upserted ?? batch.length;
-    resultsUpdated += data?.results_updated ?? 0;
+    const result = await upsertBatch(supabase, batch, useRpc);
+    upserted += result.upserted;
+    resultsUpdated += result.resultsUpdated;
   }
 
   console.log(

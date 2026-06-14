@@ -9,6 +9,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "sync:matches": "node scripts/sync-matches.mjs",
+    "setup:remote": "node scripts/remote-setup.mjs",
+    "cleanup:remote": "node scripts/cleanup-remote.mjs",
     "generate:matches-sql": "node scripts/generate-matches-sql.mjs"
   },
   "dependencies": {

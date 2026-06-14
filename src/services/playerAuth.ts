@@ -8,23 +8,34 @@ interface EnterWithNameResponse {
   error?: string;
 }
 
-function functionsUrl() {
-  const base = import.meta.env.VITE_SUPABASE_URL?.replace(/\/+$/, "");
-  if (!base) throw new Error("VITE_SUPABASE_URL não configurada.");
-  return `${base}/functions/v1/enter-with-name`;
+function authApiUrl() {
+  const override = import.meta.env.VITE_AUTH_API_URL?.trim();
+  if (override) return override;
+
+  if (import.meta.env.DEV) {
+    const base = import.meta.env.VITE_SUPABASE_URL?.replace(/\/+$/, "");
+    if (base) return `${base}/functions/v1/enter-with-name`;
+  }
+
+  return "/api/enter-with-name";
 }
 
 export async function enterWithName(displayName: string): Promise<string> {
+  const url = authApiUrl();
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  if (!anonKey) throw new Error("VITE_SUPABASE_ANON_KEY não configurada.");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
 
-  const res = await fetch(functionsUrl(), {
+  if (url.includes("/functions/v1/")) {
+    if (!anonKey) throw new Error("VITE_SUPABASE_ANON_KEY não configurada.");
+    headers.Authorization = `Bearer ${anonKey}`;
+    headers.apikey = anonKey;
+  }
+
+  const res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${anonKey}`,
-      apikey: anonKey,
-    },
+    headers,
     body: JSON.stringify({ displayName }),
   });
 
