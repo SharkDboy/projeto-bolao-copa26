@@ -24,8 +24,16 @@ function formatKickoff(iso: string) {
   });
 }
 
+const overlayBoxClass =
+  "rounded-lg border border-white/40 bg-black/45 shadow-md backdrop-blur-sm";
+
 const scoreBoxClass =
-  "flex items-stretch overflow-hidden rounded-lg border border-white/40 bg-black/45 shadow-md backdrop-blur-sm focus-within:border-emerald-400/70 focus-within:ring-1 focus-within:ring-emerald-500/30";
+  `${overlayBoxClass} flex items-stretch overflow-hidden focus-within:border-emerald-400/70 focus-within:ring-1 focus-within:ring-emerald-500/30`;
+
+const teamNameBoxClass = `${overlayBoxClass} max-w-[min(100%,12rem)] px-3 py-1 sm:max-w-[14rem]`;
+
+const teamNameClass =
+  "block truncate text-center text-sm font-semibold text-white sm:text-base";
 
 const scoreValueClass =
   "flex min-w-[2.5ch] flex-1 items-center justify-center px-2 py-1 text-5xl font-bold leading-none tabular-nums text-white sm:text-6xl";
@@ -227,9 +235,9 @@ export default function MatchCard({
 
         <div className="relative z-[2] flex items-stretch">
           <div className="flex flex-1 flex-col items-center justify-center gap-1 px-2 py-5 sm:gap-1.5 sm:py-6">
-            <span className="max-w-full truncate text-center text-sm font-semibold text-white drop-shadow-sm sm:text-base">
-              {homeLabel}
-            </span>
+            <div className={teamNameBoxClass}>
+              <span className={teamNameClass}>{homeLabel}</span>
+            </div>
             <ScoreField
               value={homeScore}
               label={homeLabel}
@@ -246,9 +254,9 @@ export default function MatchCard({
           </span>
 
           <div className="flex flex-1 flex-col items-center justify-center gap-1 px-2 py-5 sm:gap-1.5 sm:py-6">
-            <span className="max-w-full truncate text-center text-sm font-semibold text-white drop-shadow-sm sm:text-base">
-              {awayLabel}
-            </span>
+            <div className={teamNameBoxClass}>
+              <span className={teamNameClass}>{awayLabel}</span>
+            </div>
             <ScoreField
               value={awayScore}
               label={awayLabel}
