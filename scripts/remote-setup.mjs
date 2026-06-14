@@ -75,15 +75,11 @@ async function deploySupabaseFunctions() {
   run("supabase", ["login", "--token", token]);
   run("supabase", ["link", "--project-ref", "kxdrlljdtncpwtdhetit"]);
 
-  if (process.env.AUTH_NAME_SECRET) {
-    run("supabase", [
-      "secrets",
-      "set",
-      `AUTH_NAME_SECRET=${process.env.AUTH_NAME_SECRET}`,
-    ]);
+  if (process.env.CRON_SECRET) {
+    run("supabase", ["secrets", "set", `CRON_SECRET=${process.env.CRON_SECRET}`]);
   }
 
-  run("supabase", ["functions", "deploy", "enter-with-name"]);
+  run("supabase", ["functions", "deploy", "sync-match-results"]);
 }
 
 async function main() {
@@ -93,7 +89,7 @@ async function main() {
   console.log("\n=== 2/3 Sync partidas ===");
   run("npm", ["run", "sync:matches"]);
 
-  console.log("\n=== 3/3 Deploy Edge Functions (opcional) ===");
+  console.log("\n=== 3/3 Deploy sync-match-results (opcional) ===");
   await deploySupabaseFunctions();
 
   console.log("\nSetup concluído.");

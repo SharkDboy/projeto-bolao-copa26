@@ -29,6 +29,3 @@ additional_redirect_urls = ["http://localhost:5173"]
 
 [functions.sync-match-results]
 verify_jwt = false
-
-[functions.enter-with-name]
-verify_jwt = false
