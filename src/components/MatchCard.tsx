@@ -25,7 +25,7 @@ function formatKickoff(iso: string) {
 }
 
 const scoreFieldClass =
-  "w-10 min-w-[2.5rem] shrink-0 border-0 bg-transparent p-0 text-center text-3xl font-bold text-white focus:outline-none focus:ring-0 disabled:cursor-default disabled:opacity-90 sm:w-14 sm:text-4xl [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+  "min-w-[2.5ch] w-auto border-0 bg-transparent p-0 text-center text-5xl font-bold leading-none tabular-nums text-white drop-shadow-sm focus:outline-none focus:ring-0 disabled:cursor-default disabled:opacity-90 sm:text-6xl [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
 interface ScoreFieldProps {
   value: number;
@@ -114,15 +114,32 @@ export default function MatchCard({
         <time className="text-xs text-zinc-500">{formatKickoff(match.kickoffAt)}</time>
       </div>
 
-      <div className="flex items-stretch border-y border-zinc-800">
-        <div className="flex min-w-0 flex-1 items-stretch">
-          <TeamFlag
-            teamName={match.homeTeam}
-            size="panel"
-            panelSide="left"
-          />
-          <div className="flex min-w-0 flex-1 items-center justify-center gap-1 px-2 py-3 sm:gap-2 sm:px-3">
-            <span className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-white sm:text-base">
+      <div className="relative min-h-[7rem] overflow-hidden border-y border-zinc-800 sm:min-h-[8rem]">
+        <div className="absolute inset-0 z-[1] flex" aria-hidden="true">
+          <div className="relative flex-1">
+            <TeamFlag
+              teamName={match.homeTeam}
+              size="panel"
+              panelSide="left"
+              fillContainer
+            />
+            <div className="absolute inset-y-0 right-0 w-10 bg-gradient-to-r from-transparent to-black/50 sm:w-12" />
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 left-1/2 z-[1] w-4 -translate-x-1/2 bg-gradient-to-r from-black/40 via-black/55 to-black/40 sm:w-6" />
+          <div className="relative flex-1">
+            <TeamFlag
+              teamName={match.awayTeam}
+              size="panel"
+              panelSide="right"
+              fillContainer
+            />
+            <div className="absolute inset-y-0 left-0 w-10 bg-gradient-to-l from-transparent to-black/50 sm:w-12" />
+          </div>
+        </div>
+
+        <div className="relative z-[2] flex items-stretch">
+          <div className="flex flex-1 flex-col items-center justify-center gap-1 px-2 py-5 sm:gap-1.5 sm:py-6">
+            <span className="max-w-full truncate text-center text-sm font-semibold text-white drop-shadow-sm sm:text-base">
               {homeLabel}
             </span>
             <ScoreField
@@ -132,32 +149,25 @@ export default function MatchCard({
               onChange={setHomeScore}
             />
           </div>
-        </div>
 
-        <span
-          className="flex shrink-0 items-center px-1 text-2xl font-bold text-zinc-500 sm:px-2 sm:text-3xl"
-          aria-hidden="true"
-        >
-          ×
-        </span>
+          <span
+            className="flex shrink-0 items-center self-center px-0.5 text-sm font-normal text-zinc-400 drop-shadow-sm sm:px-1"
+            aria-hidden="true"
+          >
+            ×
+          </span>
 
-        <div className="flex min-w-0 flex-1 items-stretch">
-          <div className="flex min-w-0 flex-1 items-center justify-center gap-1 px-2 py-3 sm:gap-2 sm:px-3">
+          <div className="flex flex-1 flex-col items-center justify-center gap-1 px-2 py-5 sm:gap-1.5 sm:py-6">
+            <span className="max-w-full truncate text-center text-sm font-semibold text-white drop-shadow-sm sm:text-base">
+              {awayLabel}
+            </span>
             <ScoreField
               value={awayScore}
               label={awayLabel}
               disabled={disabled}
               onChange={setAwayScore}
             />
-            <span className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-white sm:text-base">
-              {awayLabel}
-            </span>
           </div>
-          <TeamFlag
-            teamName={match.awayTeam}
-            size="panel"
-            panelSide="right"
-          />
         </div>
       </div>
 
@@ -199,9 +209,14 @@ export default function MatchCard({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? "Salvando..." : justSaved ? "Salvo!" : "Salvar palpite"}
+            {!saving && !justSaved && (
+              <span className="text-base leading-none" aria-hidden="true">
+                ✦
+              </span>
+            )}
           </button>
         </div>
       )}

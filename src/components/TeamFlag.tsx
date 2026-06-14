@@ -9,6 +9,7 @@ interface TeamFlagProps {
   teamName: string;
   size?: "sm" | "md" | "lg" | "panel";
   panelSide?: "left" | "right";
+  fillContainer?: boolean;
   className?: string;
 }
 
@@ -24,6 +25,11 @@ const panelWrapperClasses = {
   right: "h-20 w-14 shrink-0 overflow-hidden rounded-r-lg sm:h-28 sm:w-20",
 };
 
+const fillWrapperClasses = {
+  left: "absolute inset-0 overflow-hidden",
+  right: "absolute inset-0 overflow-hidden",
+};
+
 const emojiSizeClasses = {
   sm: "text-base",
   md: "text-lg",
@@ -35,6 +41,7 @@ export default function TeamFlag({
   teamName,
   size = "md",
   panelSide = "left",
+  fillContainer = false,
   className = "",
 }: TeamFlagProps) {
   const [failed, setFailed] = useState(false);
@@ -43,10 +50,14 @@ export default function TeamFlag({
   const emoji = getTeamFlagEmoji(teamName);
 
   if (size === "panel") {
+    const wrapperClass = fillContainer
+      ? fillWrapperClasses[panelSide]
+      : panelWrapperClasses[panelSide];
+
     if (!url || failed) {
       return (
         <span
-          className={`inline-flex items-center justify-center bg-zinc-800 ${panelWrapperClasses[panelSide]} ${className}`}
+          className={`inline-flex items-center justify-center bg-zinc-800 ${wrapperClass} ${className}`}
           role="img"
           aria-label={label}
           title={label}
@@ -57,10 +68,7 @@ export default function TeamFlag({
     }
 
     return (
-      <span
-        className={`inline-flex ${panelWrapperClasses[panelSide]} ${className}`}
-        title={label}
-      >
+      <span className={`inline-flex ${wrapperClass} ${className}`} title={label}>
         <img
           src={url}
           alt=""
