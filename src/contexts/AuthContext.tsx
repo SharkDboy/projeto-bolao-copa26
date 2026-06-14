@@ -9,13 +9,17 @@ import {
 } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
-import { enterWithName as enterWithNameRequest } from "../services/playerAuth";
 
 interface AuthContextValue {
   user: User | null;
   displayName: string | null;
   loading: boolean;
-  enterWithName: (name: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    displayName: string,
+  ) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -79,14 +83,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [loadProfile]);
 
-  const enterWithName = useCallback(async (name: string) => {
-    const resolvedName = await enterWithNameRequest(name);
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    setUser(session?.user ?? null);
-    setDisplayName(resolvedName);
+  const signIn = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
   }, []);
+
+  const signUp = useCallback(
+    async (email: string, password: string, name: string) => {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { display_name: name },
+        },
+      });
+      if (error) throw error;
+
+      if (!data.session) {
+        throw new Error(
+          "Conta criada! Confirme seu e-mail antes de entrar (ou desative 'Confirm email' no Supabase).",
+        );
+      }
+
+      setDisplayName(name);
+    },
+    [],
+  );
 
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
@@ -96,8 +121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, displayName, loading, enterWithName, signOut }),
-    [user, displayName, loading, enterWithName, signOut],
+    () => ({ user, displayName, loading, signIn, signUp, signOut }),
+    [user, displayName, loading, signIn, signUp, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

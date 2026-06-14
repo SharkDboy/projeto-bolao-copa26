@@ -55,7 +55,7 @@ export default function Layout() {
                 onClick={handleSignOut}
                 className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
               >
-                Trocar nome
+                Sair
               </button>
             </nav>
           </div>

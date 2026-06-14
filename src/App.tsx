@@ -1,21 +1,22 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
-import EnterNamePage from "./pages/EnterNamePage";
+import LoginPage from "./pages/LoginPage";
 import MatchesPage from "./pages/MatchesPage";
 import RankingPage from "./pages/RankingPage";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/entrar" element={<EnterNamePage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/entrar" element={<Navigate to="/login" replace />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
           <Route path="/partidas" element={<MatchesPage />} />
           <Route path="/ranking" element={<RankingPage />} />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to="/entrar" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
