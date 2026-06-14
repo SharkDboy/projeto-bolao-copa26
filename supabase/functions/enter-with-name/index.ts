@@ -54,19 +54,6 @@ async function resolveSession(
   displayName: string,
   normalized: string,
 ) {
-  const signIn = await admin.auth.signInWithPassword({ email, password });
-
-  if (signIn.error && signIn.error.message !== "Invalid login credentials") {
-    throw new Error(signIn.error.message);
-  }
-
-  if (signIn.data.session) {
-    return {
-      session: signIn.data.session,
-      userId: signIn.data.user.id,
-    };
-  }
-
   const existingProfile = await findProfileByNormalizedName(admin, normalized);
 
   if (existingProfile) {
@@ -78,16 +65,29 @@ async function resolveSession(
       displayName,
     );
 
-    const retry = await admin.auth.signInWithPassword({ email, password });
-    if (retry.error || !retry.data.session) {
+    const signIn = await admin.auth.signInWithPassword({ email, password });
+    if (signIn.error || !signIn.data.session) {
       throw new Error(
-        retry.error?.message ?? "Não foi possível entrar com este nome.",
+        signIn.error?.message ?? "Não foi possível entrar com este nome.",
       );
     }
 
     return {
-      session: retry.data.session,
-      userId: retry.data.user.id,
+      session: signIn.data.session,
+      userId: existingProfile.id,
+    };
+  }
+
+  const signIn = await admin.auth.signInWithPassword({ email, password });
+
+  if (signIn.error && signIn.error.message !== "Invalid login credentials") {
+    throw new Error(signIn.error.message);
+  }
+
+  if (signIn.data.session) {
+    return {
+      session: signIn.data.session,
+      userId: signIn.data.user.id,
     };
   }
 

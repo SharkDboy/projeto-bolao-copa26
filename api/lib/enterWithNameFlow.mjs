@@ -34,23 +34,27 @@ export async function migrateAuthToSynthetic(
   if (updateError) throw updateError;
 }
 
-export async function resolveSession(
-  admin,
-  { email, password, displayName, normalized },
-) {
+async function signInSynthetic(admin, email, password) {
   const signIn = await admin.auth.signInWithPassword({ email, password });
 
   if (signIn.error && signIn.error.message !== "Invalid login credentials") {
     throw new Error(signIn.error.message);
   }
 
-  if (signIn.data.session) {
-    return {
-      session: signIn.data.session,
-      userId: signIn.data.user.id,
-    };
+  if (!signIn.data.session || !signIn.data.user) {
+    return null;
   }
 
+  return {
+    session: signIn.data.session,
+    userId: signIn.data.user.id,
+  };
+}
+
+export async function resolveSession(
+  admin,
+  { email, password, displayName, normalized },
+) {
   const existingProfile = await findProfileByNormalizedName(admin, normalized);
 
   if (existingProfile) {
@@ -62,17 +66,20 @@ export async function resolveSession(
       displayName,
     );
 
-    const retry = await admin.auth.signInWithPassword({ email, password });
-    if (retry.error || !retry.data.session) {
-      throw new Error(
-        retry.error?.message ?? "Não foi possível entrar com este nome.",
-      );
+    const signedIn = await signInSynthetic(admin, email, password);
+    if (!signedIn) {
+      throw new Error("Não foi possível entrar com este nome.");
     }
 
     return {
-      session: retry.data.session,
-      userId: retry.data.user.id,
+      session: signedIn.session,
+      userId: existingProfile.id,
     };
+  }
+
+  const signedIn = await signInSynthetic(admin, email, password);
+  if (signedIn) {
+    return signedIn;
   }
 
   const signUp = await admin.auth.signUp({
@@ -82,25 +89,22 @@ export async function resolveSession(
   });
 
   if (signUp.error) {
-    const retry = await admin.auth.signInWithPassword({ email, password });
-    if (retry.error || !retry.data.session) {
+    const retry = await signInSynthetic(admin, email, password);
+    if (!retry) {
       throw new Error(
         signUp.error.message ?? "Não foi possível criar a conta.",
       );
     }
-    return {
-      session: retry.data.session,
-      userId: retry.data.user.id,
-    };
+    return retry;
   }
 
   let session = signUp.data.session;
   let userId = signUp.data.user?.id ?? null;
 
   if (!session) {
-    const retry = await admin.auth.signInWithPassword({ email, password });
-    session = retry.data.session ?? null;
-    userId = retry.data.user?.id ?? userId;
+    const retry = await signInSynthetic(admin, email, password);
+    session = retry?.session ?? null;
+    userId = retry?.userId ?? userId;
   }
 
   if (!session || !userId) {
