@@ -30,10 +30,13 @@ const overlayBoxClass =
 const scoreBoxClass =
   `${overlayBoxClass} flex items-stretch overflow-hidden focus-within:border-emerald-400/70 focus-within:ring-1 focus-within:ring-emerald-500/30`;
 
-const teamNameBoxClass = `${overlayBoxClass} max-w-[min(100%,12rem)] px-3 py-1 sm:max-w-[14rem]`;
+const teamNameBoxClass = `${overlayBoxClass} w-full max-w-full px-2 py-1 sm:px-2.5`;
 
 const teamNameClass =
-  "block truncate text-center text-sm font-semibold text-white sm:text-base";
+  "block text-balance text-center text-xs font-semibold leading-snug text-white break-words hyphens-auto sm:text-sm";
+
+const teamColumnClass =
+  "flex min-w-0 flex-1 flex-col items-stretch justify-center gap-1 px-1.5 py-5 sm:gap-1.5 sm:px-2 sm:py-6";
 
 const scoreValueClass =
   "flex min-w-[2.5ch] flex-1 items-center justify-center px-2 py-1 text-5xl font-bold leading-none tabular-nums text-white sm:text-6xl";
@@ -234,16 +237,18 @@ export default function MatchCard({
         </div>
 
         <div className="relative z-[2] flex items-stretch">
-          <div className="flex flex-1 flex-col items-center justify-center gap-1 px-2 py-5 sm:gap-1.5 sm:py-6">
+          <div className={teamColumnClass}>
             <div className={teamNameBoxClass}>
               <span className={teamNameClass}>{homeLabel}</span>
             </div>
-            <ScoreField
+            <div className="flex justify-center">
+              <ScoreField
               value={homeScore}
               label={homeLabel}
               disabled={disabled}
               onChange={setHomeScore}
             />
+            </div>
           </div>
 
           <span
@@ -253,16 +258,18 @@ export default function MatchCard({
             ×
           </span>
 
-          <div className="flex flex-1 flex-col items-center justify-center gap-1 px-2 py-5 sm:gap-1.5 sm:py-6">
+          <div className={teamColumnClass}>
             <div className={teamNameBoxClass}>
               <span className={teamNameClass}>{awayLabel}</span>
             </div>
-            <ScoreField
+            <div className="flex justify-center">
+              <ScoreField
               value={awayScore}
               label={awayLabel}
               disabled={disabled}
               onChange={setAwayScore}
             />
+            </div>
           </div>
         </div>
       </div>
