@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import type { Match, Prediction } from "../types";
 import { calculateMatchPoints, hasResult } from "../lib/scoring";
 import { isMatchFinished } from "../lib/matchStatus";
-import { normalizeScore, parseScoreInput } from "../lib/predictionValidation";
+import { normalizeScore, SCORE_MAX, SCORE_MIN } from "../lib/predictionValidation";
 import { getTeamDisplayName } from "../lib/teamFlags";
 import TeamFlag from "./TeamFlag";
 
@@ -24,8 +24,17 @@ function formatKickoff(iso: string) {
   });
 }
 
-const scoreFieldClass =
-  "min-w-[2.5ch] w-auto border-0 bg-transparent p-0 text-center text-5xl font-bold leading-none tabular-nums text-white drop-shadow-sm focus:outline-none focus:ring-0 disabled:cursor-default disabled:opacity-90 sm:text-6xl [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+const scoreBoxClass =
+  "flex items-stretch overflow-hidden rounded-lg border border-white/40 bg-black/45 shadow-md backdrop-blur-sm focus-within:border-emerald-400/70 focus-within:ring-1 focus-within:ring-emerald-500/30";
+
+const scoreValueClass =
+  "flex min-w-[2.5ch] flex-1 items-center justify-center px-2 py-1 text-5xl font-bold leading-none tabular-nums text-white sm:text-6xl";
+
+const scoreStepColumnClass =
+  "flex w-9 shrink-0 flex-col border-l border-white/20 sm:w-10";
+
+const scoreStepClass =
+  "flex flex-1 items-center justify-center text-zinc-300 transition-colors hover:bg-white/10 hover:text-white active:bg-white/15 disabled:cursor-not-allowed disabled:opacity-25 disabled:hover:bg-transparent";
 
 interface ScoreFieldProps {
   value: number;
@@ -34,25 +43,104 @@ interface ScoreFieldProps {
   onChange: (value: number) => void;
 }
 
+function ScoreStepButton({
+  direction,
+  label,
+  disabled,
+  onClick,
+}: {
+  direction: "up" | "down";
+  label: string;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const action = direction === "up" ? "Aumentar" : "Diminuir";
+
+  return (
+    <button
+      type="button"
+      aria-label={`${action} placar ${label}`}
+      disabled={disabled}
+      onClick={onClick}
+      className={scoreStepClass}
+    >
+      <svg
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      className="h-3.5 w-3.5 sm:h-4 sm:w-4"
+        aria-hidden="true"
+      >
+        {direction === "up" ? (
+          <path
+            fillRule="evenodd"
+            d="M10 3a.75.75 0 01.53.22l4.5 4.5a.75.75 0 11-1.06 1.06L10 5.06 6.03 9.03a.75.75 0 01-1.06-1.06l4.5-4.5A.75.75 0 0110 3z"
+            clipRule="evenodd"
+          />
+        ) : (
+          <path
+            fillRule="evenodd"
+            d="M10 17a.75.75 0 01-.53-.22l-4.5-4.5a.75.75 0 111.06-1.06L10 14.94l3.97-3.97a.75.75 0 111.06 1.06l-4.5 4.5A.75.75 0 0110 17z"
+            clipRule="evenodd"
+          />
+        )}
+      </svg>
+    </button>
+  );
+}
+
 function ScoreField({ value, label, disabled, onChange }: ScoreFieldProps) {
+  function step(delta: number) {
+    onChange(normalizeScore(value + delta));
+  }
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === "ArrowUp" || event.key === "ArrowRight") {
+      event.preventDefault();
+      step(1);
+    } else if (event.key === "ArrowDown" || event.key === "ArrowLeft") {
+      event.preventDefault();
+      step(-1);
+    }
+  }
+
   if (disabled) {
     return (
-      <span className={scoreFieldClass} aria-label={`Placar ${label}`}>
-        {value}
-      </span>
+      <div className={`${scoreBoxClass} justify-center`}>
+        <span className={`${scoreValueClass} flex-none px-4`} aria-label={`Placar ${label}`}>
+          {value}
+        </span>
+      </div>
     );
   }
 
   return (
-    <input
-      type="number"
-      min={0}
-      max={20}
+    <div
+      className={scoreBoxClass}
+      tabIndex={0}
+      role="spinbutton"
       aria-label={`Placar ${label}`}
-      value={value}
-      onChange={(e) => onChange(parseScoreInput(e.target.value))}
-      className={scoreFieldClass}
-    />
+      aria-valuemin={SCORE_MIN}
+      aria-valuemax={SCORE_MAX}
+      aria-valuenow={value}
+      onKeyDown={handleKeyDown}
+    >
+      <span className={scoreValueClass}>{value}</span>
+      <div className={scoreStepColumnClass}>
+        <ScoreStepButton
+          direction="up"
+          label={label}
+          disabled={value >= SCORE_MAX}
+          onClick={() => step(1)}
+        />
+        <div className="h-px bg-white/20" aria-hidden="true" />
+        <ScoreStepButton
+          direction="down"
+          label={label}
+          disabled={value <= SCORE_MIN}
+          onClick={() => step(-1)}
+        />
+      </div>
+    </div>
   );
 }
 

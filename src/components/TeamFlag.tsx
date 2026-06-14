@@ -17,7 +17,7 @@ const imgSizeClasses = {
   sm: "h-4 w-6",
   md: "h-5 w-7",
   lg: "h-6 w-9",
-  panel: "h-full w-full object-cover",
+  panel: "h-full w-full object-cover object-center",
 };
 
 const panelWrapperClasses = {
@@ -72,6 +72,8 @@ export default function TeamFlag({
         <img
           src={url}
           alt=""
+          decoding="async"
+          fetchPriority="low"
           className={imgSizeClasses.panel}
           onError={() => setFailed(true)}
         />
